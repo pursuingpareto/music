@@ -3,7 +3,7 @@ package org.example.pg
 fun Grammar.Companion.fromDsl(block: Builder.() -> Unit) = Builder().apply(block).build()
 
 class Builder {
-  private var name: Name? = null
+  private var name: Process.Name? = null
   private val components = mutableListOf<Defined>()
   private var definedBuilder: DefinedProcessBuilder? = null
 
@@ -15,7 +15,7 @@ class Builder {
   }
 
   private fun describe(processName: String, block: DefinedProcessBuilder.() -> Unit) {
-    name = Name(processName).also { name ->
+    name = Process.Name(processName).also { name ->
       definedBuilder = DefinedProcessBuilder(name).also { builder ->
         builder.apply(block)
         components.add(builder.build())
@@ -24,24 +24,19 @@ class Builder {
   }
 
   @Suppress("FunctionName")
-  class DefinedProcessBuilder(private val name: Name) {
+  class DefinedProcessBuilder(private val name: Process.Name) {
     private var process: Process? = null
 
-    infix fun Any.THEN(other: Any): BinOp = makeBinOp(this, other) { l, r ->
-      Sequence(l, r) }
-    infix fun Any.OR(other: Any): BinOp = makeBinOp(this, other) { l, r ->
-      Decision(l, r) }
-    infix fun Any.AND(other: Any): BinOp = makeBinOp(this, other) { l, r ->
-      Parallel(l, r) }
+    infix fun Any.THEN(other: Any): Binary = makeBinOp(this, other) { l, r ->
+      Binary.Sequence(l, r) }
+    infix fun Any.OR(other: Any): Binary = makeBinOp(this, other) { l, r ->
+      Binary.Decision(l, r) }
+    infix fun Any.AND(other: Any): Binary = makeBinOp(this, other) { l, r ->
+      Binary.Eclipse(l, r) }
 
-    private fun makeBinOp(
-      left: Any,
-      right: Any,
-      create: (l: Process,
-               r: Process) -> BinOp
-    ): BinOp {
-      return create(left.asProcess(), right.asProcess())
-        .also { process = it }
+    private fun makeBinOp(left: Any, right: Any,
+      create: (l: Process, r: Process) -> Binary): Binary {
+      return create(left.asProcess(), right.asProcess()).also { process = it }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -54,13 +49,13 @@ class Builder {
       }
       if (arg is String) {
         arg = try {
-          Reference(Name(arg)) }
+          Reference(Process.Name(arg)) }
         catch (ex: IllegalArgumentException) {
           Terminal(arg) }
       }
-      if (arg !is Process) { throw DSLParseException("could not convert $arg to Process<*>") }
+      if (arg !is Process) { throw DSLParseException("could not convert $arg to Process") }
       if (optional) { arg = Optional(arg) }
-      return arg as? Process ?: throw DSLParseException("could not convert $arg to Process<String>")
+      return arg as? Process ?: throw DSLParseException("could not convert $arg to Process>")
     }
     fun build(): Defined {
       val p = process

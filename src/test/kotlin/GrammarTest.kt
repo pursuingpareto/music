@@ -1,8 +1,7 @@
 import kotlin.test.assertEquals
-import org.example.pg.Program
-import org.example.pg.Grammar
-import org.example.pg.Parallel
-import org.example.pg.fromDsl
+import org.example.pg.*
+// import org.example.pg.Grammar
+// import org.example.pg.fromDsl
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -56,6 +55,41 @@ class GrammarTest {
     }
   }
 
+  @Test
+  fun testCanonical() {
+    assertEquals("abc", Terminal("abc").canonical())
+    assertEquals("[ a ]", Optional(Terminal("a")).canonical())
+    assertEquals("a > b", Binary.Sequence(Terminal("a"), Terminal("b")).canonical())
+    assertEquals("a | b", Binary.Decision(Terminal("a"), Terminal("b")).canonical())
+    assertEquals("a & b", Binary.Eclipse(Terminal("a"), Terminal("b")).canonical())
+
+    val p1 = Defined(
+      Process.Name("Process1"),
+      Binary.Sequence(
+        Terminal("a"),
+        Terminal("b")))
+    assertEquals("""
+      Process1
+        : a > b
+    """.trimIndent(), p1.canonical())
+
+    val p2 = Defined(
+      Process.Name("Process2"),
+      Reference(Process.Name("Process1")))
+    assertEquals("""
+      Process2
+        : Process1
+    """.trimIndent(), p2.canonical())
+
+    val grammar = Grammar(listOf(p1, p2))
+    assertEquals("""
+      Process1
+        : a > b""".trimIndent() + "\n\n" + """
+      Process2
+        : Process1
+    """.trimIndent(), grammar.canonical())
+  }
+
 
   @Test
   fun testExtend() {
@@ -91,10 +125,10 @@ class GrammarTest {
       }
     }
     val process = parallelGrammar.processes.first().process
-    assert(process is Parallel)
-    val parallel = process as Parallel
-    assertEquals("win", parallel.foreground.toString())
-    assertEquals("celebrate", parallel.background.toString())
+    assert(process is Binary.Eclipse)
+    val parallel = process as Binary.Eclipse
+    assertEquals("win", parallel.foreground.canonical())
+    assertEquals("celebrate", parallel.background.canonical())
   }
 
   @Test

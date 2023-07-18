@@ -1,15 +1,23 @@
 package org.example.pg
 
 class Grammar(val processes: List<Defined>) {
-  infix fun extend(other: Grammar) = Grammar(this.processes + other.processes)
+
   init { validateGrammar(processes) }
-  override fun toString() = processes.joinToString(separator = "\n\n") { it.toString() }
+
+  infix fun extend(other: Grammar) = Grammar(this.processes + other.processes)
+
+  fun canonical() = processes.joinToString(separator = "\n\n") { it.canonical() }
+
+  override fun toString() = canonical()
+
   companion object {
+
     fun validateGrammar(components: List<Defined>) {
       validateUniqueNames(components)
     }
+
     private fun validateUniqueNames(components: List<Defined>) {
-      fun message(name: Name, count: Int) = "$name defined $count times"
+      fun message(name: Process.Name, count: Int) = "$name defined $count times"
       val errors = components
         .map { it.name }
         .groupingBy { it }
