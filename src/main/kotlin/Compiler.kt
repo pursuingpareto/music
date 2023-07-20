@@ -2,7 +2,7 @@ package org.example.pg
 
 object Expanders {
     val equality: Expander = {
-        ("$this" == it) || throw UnrunnableProcess()}
+        ("$this" == it) || throw NoMatchForInput(it)}
 }
 
 /**
@@ -24,7 +24,11 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         try { process(word) } catch (e: UnrunnableProcess) { null } }
 
     private fun decision(a: OnWord, b: OnWord) = { word: String ->
-        a(word) ?: b(word) }
+        val aw = try { a(word) } catch (e: Exception) { false }
+        val bw = try { b(word) } catch (e: Exception) { false }
+        if (aw == false && bw == false) throw NoMatchForInput(word)
+        if (aw != false && bw != false) throw AmbiguousBranching()
+        if (aw == false) bw else aw }
 
     private fun ref(name: Name.Defined) = { word: String ->
         this.namespace[name]?.invoke(word) }
@@ -33,7 +37,7 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         when (val xw = x(word)) {
             null -> y(word)
             true -> { w: String -> y(w) }
-            false -> throw UnrunnableProcess()
+            false -> throw NoMatchForInput(word)
             else -> sequence(xw as OnWord, y)
         } }
 

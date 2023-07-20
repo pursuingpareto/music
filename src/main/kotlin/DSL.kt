@@ -2,6 +2,8 @@ package org.example.pg
 
 fun Grammar.Companion.fromDsl(block: Builder.() -> Unit) = Builder().apply(block).build()
 
+infix fun Grammar.extend(block: Builder.() -> Unit) = this.extend(Builder().apply(block).build())
+
 class Builder {
   private var name: Name.Defined? = null
   private val components = mutableListOf<Defined>()

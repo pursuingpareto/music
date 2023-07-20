@@ -1,5 +1,9 @@
 package org.example.pg
 
+typealias Sequence = Dimension.Time
+typealias Decision = Dimension.Choice
+typealias Parallel = Dimension.Space
+
 /**
  * A container for various process types.  Each subtype can be represented
  * in a "canonical" form by calling [Process.canonical].
@@ -65,9 +69,7 @@ data class Expanding(val obj: Name.Expanding): Process {
  *
  * @param referencedName the [Name.Defined] of the corresponding [Defined] process.
  */
-data class Reference(val referencedName: Name.Defined): Process {
-  constructor(name: String): this(Name.Defined(name))
-}
+data class Reference(val referencedName: Name.Defined): Process
 
 
 /**
@@ -77,14 +79,16 @@ data class Reference(val referencedName: Name.Defined): Process {
  * @param name the name of this process.
  * @param process the corresponding process.
  */
-data class Defined(val name: Name.Defined, val process: Process): Process
+data class Defined(val name: Name.Defined, val process: Process): Process {
+  init { require(process !is Optional && process !is Expanding) } }
 
 
 /**
  * ## `[ p ]`
  * An optional process may be evaluated or skipped.
  */
-data class Optional(val process: Process): Process
+data class Optional(val process: Process): Process {
+  init { require(process !is Optional) }}
 
 
 /**
@@ -126,7 +130,8 @@ sealed class Dimension(
    */
   data class Choice(
     val left: Process,
-    val right: Process): Dimension(left, right)
+    val right: Process): Dimension(left, right) {
+      init { require(left !is Optional && right !is Optional) } }
 
 
   /**
@@ -142,5 +147,6 @@ sealed class Dimension(
    */
   data class Space(
     val back: Process,
-    val fore: Process): Dimension(back, fore)
+    val fore: Process): Dimension(back, fore) {
+    init { require(back !is Optional || fore !is Optional) } }
 }

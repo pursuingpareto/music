@@ -22,7 +22,12 @@ class Grammar(val processes: List<Defined>) {
   companion object {
 
     fun validateGrammar(components: List<Defined>) {
+      validateAtLeastOneComponent(components)
       validateUniqueNames(components)
+    }
+
+    private fun validateAtLeastOneComponent(components: List<Defined>) {
+      if (components.isEmpty()) throw GrammarValidationException("cannot create grammar with zero processes")
     }
 
     private fun validateUniqueNames(components: List<Defined>) {

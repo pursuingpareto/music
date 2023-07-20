@@ -30,6 +30,9 @@ sealed class Name(private val name: String) {
 
 
     class Expanding(name: String): Name(name) {
-        init { require(!name.isPascalCase()) }
+        init {
+            require(!name.isPascalCase())
+            require(name.isNotEmpty())
+        }
     }
 }
