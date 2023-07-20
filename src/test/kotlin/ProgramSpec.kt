@@ -1,7 +1,16 @@
+import Grammars.RPSGrammar
+import Grammars.RockPaperScissors
+import Grammars.celebrate
+import Grammars.paper
+import Grammars.rock
+import Grammars.scissors
+import Grammars.shoot
+import Grammars.win
 import org.example.pg.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
 
 class ProgramSpec {
 
@@ -294,5 +303,25 @@ class ProgramSpec {
                 assertThrows<AmbiguousBranching> { begin()("b") }
             }
         }
+    }
+
+    @Test
+    fun `the compiler can be modified to add additional functionality`() {
+        val timings = mutableListOf<Pair<Name, Double>>()
+        var start = System.nanoTime()
+        Program
+            .from(RPSGrammar) { word ->
+                val now = System.nanoTime()
+                val dur = now - start
+                start = now
+                timings.add(Pair(this, dur / 1000.0))
+                if ("$this" != word) throw NoMatchForInput("Invalid!") else true
+            }
+            .begin(RockPaperScissors)
+            .invoke(rock).also { Thread.sleep(42) }
+            .invoke(paper).also { Thread.sleep(33) }
+            .invoke(scissors)(shoot)(rock)(win)(celebrate)
+
+        assertEquals(11, timings.count())
     }
 }

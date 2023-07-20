@@ -200,6 +200,42 @@ class GrammarSpec {
         }
 
         @Test
+        fun `have a kotlin-agnostic string representation`() {
+            assertEquals("abc", Expanding("abc").canonical())
+            assertEquals("[ a ]", Optional(Expanding("a")).canonical())
+            assertEquals("a > b", Sequence(Expanding("a"), Expanding("b")).canonical())
+            assertEquals("a | b", Decision(Expanding("a"), Expanding("b")).canonical())
+            assertEquals("a & b", Parallel(Expanding("a"), Expanding("b")).canonical())
+
+            val p1 = Defined(
+                Name.Defined("Process1"),
+                Dimension.Time(
+                    Expanding("a"),
+                    Expanding("b")))
+            assertEquals("""
+              Process1
+                : a > b
+            """.trimIndent(), p1.canonical())
+
+            val p2 = Defined(
+                Name.Defined("Process2"),
+                Reference(Name.Defined("Process1")))
+            assertEquals("""
+              Process2
+                : Process1
+            """.trimIndent(), p2.canonical())
+
+            val grammar = Grammar(listOf(p1, p2))
+            assertEquals("""
+              Process1
+                : a > b
+              
+              Process2
+                : Process1
+            """.trimIndent(), grammar.canonical())
+        }
+
+        @Test
         fun `definitions for all references must exist`() {
             todo { }
         }
