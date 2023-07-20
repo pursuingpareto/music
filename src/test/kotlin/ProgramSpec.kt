@@ -34,8 +34,49 @@ class ProgramSpec {
             "a" then "b" then "c"
         }
     }
+
+    @Nested
+    inner class Lifecycle {
+
+        @Test
+        fun `programs can begin and transition and end`() {
+            val grammar = Grammar.fromDsl {
+                "Program" {
+                    "beginning" then "transition" then "finish"
+                }
+            }
+
+            // this is good!
+            Program.from(grammar)
+                .begin("Program")
+                .invoke("beginning")("transition")("finish")
+                .end()
+
+            // but it can fail at any of the phases...
+            // like in the beginning:
+            assertThrows<NoMatchForInput> {
+                Program.from(grammar)
+                    .begin("Pilgrim") }
+
+            // or in the middle:
+            assertThrows<NoMatchForInput> {
+                Program.from(grammar)
+                    .begin("Program")
+                    .invoke("beginning")("finish") }
+
+            // or by ending before the process has finished
+            assertThrows<NoMatchForInput> {
+                Program.from(grammar)
+                    .begin("Program")
+                    .invoke("beginning")("transition")
+                    .end()
+            }
+        }
+    }
+
     @Nested
     inner class Sequences {
+
         @Test
         fun `simple sequence runs successfully`() {
             Program.from(ab).begin("AB")("a")("b")
@@ -66,6 +107,7 @@ class ProgramSpec {
 
         @Nested
         inner class WithOptionals {
+
             @Test
             fun `optional at beginning of sequence is optional`() {
                 Program.from(optionalAThenB)
@@ -108,6 +150,29 @@ class ProgramSpec {
                 Program.from(optionalMiddle)
                     .begin("OptionalMiddle")
                     .invoke("a")("c")
+            }
+
+            @Test
+            fun `sequences with two optionals are not allowed`() {
+                val grammar = Grammar.fromDsl {
+                    "DoubleOptional" {
+                        { "a" } then { "b" }
+                    }
+                }
+
+                val begin = { Program.from(grammar).begin("DoubleOptional") }
+
+                // these are both allowed
+                begin()("a")("b")
+                begin()("b")
+
+                // these are not
+                assertThrows<NoMatchForInput> {
+                    begin()("blah") }
+                assertThrows<ProcessExhausted> {
+                    begin()("a")("b")("c") }
+                assertThrows<NoMatchForInput> {
+                    begin()("a")("c") }
             }
 
             @Test
@@ -165,13 +230,22 @@ class ProgramSpec {
         }
 
         @Test
-        fun `branches are taken when they  user input`() {
+        fun `branches fail on invalid input`() {
+            val grammar = Grammar.fromDsl {
+                "Branching" {
+                    ("a" then "b") or
+                    ("c" then "d")
+                } }
 
+            val begin = { Program.from(grammar).begin("Branching") }
+
+            assertThrows<NoMatchForInput> { begin()("b") }
+            assertThrows<NoMatchForInput> { begin()("d") }
         }
 
         @Test
         fun `must not be ambiguous`() {
-            // both branches require an "a" as the first step, which is not allowed
+            // Note that BOTH branches start with "a", which makes this ambiguous.
             val grammar = Grammar.fromDsl {
                 "AmbiguousBranch" {
                     ("a" then "b") or
@@ -180,6 +254,44 @@ class ProgramSpec {
             }
             assertThrows<AmbiguousBranching> {
                 Program.from(grammar).begin("AmbiguousBranch")("a")
+            }
+        }
+
+        /**
+         * Branches may not be optional. But they might contain optionals.
+         */
+        @Nested
+        inner class InvolvingOptionals {
+
+            @Test
+            fun `branches may not be optional`() {
+                assertThrows<RuntimeException> {
+                    Program.from(Grammar.fromDsl {
+                        "OptionalBranch" {
+                            { "a" } or "b"
+                        }})}
+
+                assertThrows<RuntimeException> {
+                    Program.from(Grammar.fromDsl {
+                        "OptionalBranch" {
+                            "a" or { "b" }
+                        }})}
+            }
+
+            @Test
+            fun `sequence branches with optionals fail at runtime when ambiguous`() {
+                val grammar = Grammar.fromDsl {
+                    "Branching" {
+                        ({"a"} then "b") or ("b" then "c")
+                    }}
+
+                val begin = { Program.from(grammar).begin("Branching") }
+
+                // unambiguous calls are fine
+                begin()("a")("b")
+
+                // but ambiguous calls fail
+                assertThrows<AmbiguousBranching> { begin()("b") }
             }
         }
     }
