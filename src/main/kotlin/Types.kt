@@ -5,6 +5,10 @@ typealias OnWord = (Word) -> Any?
 
 typealias Word = String
 
+typealias RequiredArg = String
+
+typealias Param = Process
+
 typealias Expander = Name.Expanding.(String) -> Any?
 
 typealias MutableNamespace = MutableMap<Name.Defined, OnWord>

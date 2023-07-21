@@ -39,7 +39,7 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         if (attempts.none { it == false }) throw AmbiguousBranching()
         if (attempts.first() == false) attempts.last() else attempts.first() }
 
-    private fun ref(name: Name.Defined) = { word: Word ->
+    private fun reference(name: Name.Defined, params: List<Param>) = { word: Word ->
         this.namespace[name]?.invoke(word) ?: throw NoMatchForInput(word) }
 
     private fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
@@ -48,16 +48,22 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
             true -> { w: Word -> y(w) }
             else -> sequence(xw as OnWord, y) } }
 
-    private fun named(onWord: OnWord, name: Name.Defined): OnWord {
+    private fun named(
+        onWord: OnWord,
+        name: Name.Defined
+    ): OnWord {
         this.namespace[name] = onWord
         return { word: Word -> onWord(word) } }
 
-    private fun functionalize(process: Process): OnWord = when (process) {
-        is Dimension.Time   -> sequence(functionalize(process.tick), functionalize(process.tock))
-        is Dimension.Choice -> decision(functionalize(process.left), functionalize(process.right))
-        is Optional         -> optional(functionalize(process.process))
+    private fun functionalize(
+        process: Process,
+        params: List<RequiredArg> = listOf()
+    ): OnWord = when (process) {
+        is Dimension.Time   -> sequence(functionalize(process.tick, params), functionalize(process.tock, params))
+        is Dimension.Choice -> decision(functionalize(process.left, params), functionalize(process.right, params))
+        is Optional         -> optional(functionalize(process.process, params))
         is Expanding        -> expanding(process.obj)
         is Function         -> named(functionalize(process.process), process.name)
-        is Reference        -> ref(process.referencedName)
+        is Reference        -> reference(process.referencedName, process.params)
         else                -> throw UnrunnableProcess("not supported ${process}!") }
 }

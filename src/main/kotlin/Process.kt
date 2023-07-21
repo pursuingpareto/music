@@ -46,9 +46,9 @@ sealed interface Process {
     is Dimension.Choice -> "${left.canonical()} | ${right.canonical()}"
     is Dimension.Space  -> "${back.canonical()} & ${fore.canonical()}"
     is Dimension.Time   -> "${tick.canonical()} > ${tock.canonical()}"
-    is Function         -> "$name\n  : ${process.canonical()}"
+    is Function         -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
     is Optional         -> "[ ${process.canonical()} ]"
-    is Reference        -> referencedName.toString()
+    is Reference        -> "$referencedName(${params.map {it.canonical()}.joinToString()})"
     is Expanding        -> obj.toString()
   }
 }
@@ -69,7 +69,9 @@ data class Expanding(val obj: Name.Expanding): Process {
  *
  * @param referencedName the [Name.Defined] of the corresponding [Function] process.
  */
-data class Reference(val referencedName: Name.Defined): Process
+data class Reference(
+  val referencedName: Name.Defined,
+  val params: List<Param> = listOf()): Process
 
 
 /**
@@ -79,7 +81,10 @@ data class Reference(val referencedName: Name.Defined): Process
  * @param name the name of this process.
  * @param process the corresponding process.
  */
-data class Function(val name: Name.Defined, val process: Process): Process {
+data class Function(
+  val name: Name.Defined,
+  val process: Process,
+  val requiredArgs: List<RequiredArg> = listOf()): Process {
   init { require(process !is Optional && process !is Expanding) } }
 
 

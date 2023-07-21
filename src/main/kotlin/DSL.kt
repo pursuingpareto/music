@@ -11,15 +11,23 @@ class Builder {
 
   fun build() = Grammar(components)
 
-  operator fun String.invoke(block: DefinedProcessBuilder.() -> Unit) = this.apply {
+  operator fun String.invoke(vararg args: RequiredArg, block: DefinedProcessBuilder.() -> Unit) = this.apply {
       name = Name.Defined(this).also { name ->
-        definedBuilder = DefinedProcessBuilder(name).also { builder ->
+        definedBuilder = DefinedProcessBuilder(name, args).also { builder ->
           builder.apply(block)
           components.add(builder.build()) } } }
 
 
-  class DefinedProcessBuilder(private val name: Name.Defined) {
+  class DefinedProcessBuilder(
+    private val name: Name.Defined,
+    args: Array<out RequiredArg>? = null) {
+    private val args = args?.toList() ?: listOf()
     private var process: Process? = null
+
+    operator fun String.invoke(vararg maybeParams: Any): Reference {
+      val params = maybeParams.map { it.asProcess() }
+      return Reference(Name.Defined(this), params)
+    }
 
     /**
      * Constructs a [Dimension.Time] from **`process1`** and **`process2`**
@@ -55,7 +63,7 @@ class Builder {
         l, r -> Dimension.Space(l, r) }
 
     fun build(): Function {
-      return process?.let { Function(name, it) }
+      return process?.let { Function(name, it, args) }
         ?: throw DSLParseException("can't build null process") }
 
     private fun makeBinOp(
