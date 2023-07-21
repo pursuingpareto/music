@@ -20,7 +20,7 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
 
     fun compile(grammar: Grammar): Program {
         namespace.clear()
-        grammar.processes.forEach { functionalize(it) }
+        grammar.processes.forEach { it.functionalize() }
         return Program(namespace)
     }
 
@@ -55,15 +55,14 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         this.namespace[name] = onWord
         return { word: Word -> onWord(word) } }
 
-    private fun functionalize(
-        process: Process,
-        params: List<RequiredArg> = listOf()
-    ): OnWord = when (process) {
-        is Dimension.Time   -> sequence(functionalize(process.tick, params), functionalize(process.tock, params))
-        is Dimension.Choice -> decision(functionalize(process.left, params), functionalize(process.right, params))
-        is Optional         -> optional(functionalize(process.process, params))
-        is Expanding        -> expanding(process.obj)
-        is Function         -> named(functionalize(process.process), process.name)
-        is Reference        -> reference(process.referencedName, process.params)
-        else                -> throw UnrunnableProcess("not supported ${process}!") }
+    private fun Process.functionalize(
+        params: Map<Name.Expanding, Param> = mapOf()
+    ): OnWord = when (this) {
+        is Dimension.Time   -> sequence(tick.functionalize(params), tock.functionalize(params))
+        is Dimension.Choice -> decision(left.functionalize(params), right.functionalize(params))
+        is Optional         -> optional(process.functionalize(params))
+        is Expanding        -> params[obj]?.functionalize(params) ?: expanding(obj)
+        is Function         -> named(process.functionalize(params), name)
+        is Reference        -> reference(referencedName, this.params)
+        else                -> throw UnrunnableProcess("not supported ${this}!") }
 }

@@ -24,6 +24,12 @@ class Grammar(val processes: List<Function>) {
     fun validateGrammar(components: List<Function>) {
       validateAtLeastOneComponent(components)
       validateUniqueNames(components)
+//      validateSufficientParams()
+      
+    }
+
+    private fun validateSufficientParams() {
+      TODO("Not yet implemented")
     }
 
     private fun validateAtLeastOneComponent(components: List<Function>) {
