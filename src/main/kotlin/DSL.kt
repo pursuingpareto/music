@@ -11,19 +11,11 @@ class Builder {
 
   fun build() = Grammar(components)
 
-  operator fun String.invoke(block: DefinedProcessBuilder.() -> Unit): String {
-    describe(this, block)
-    return this
-  }
-
-  private fun describe(processName: String, block: DefinedProcessBuilder.() -> Unit) {
-    name = Name.Defined(processName).also { name ->
-      definedBuilder = DefinedProcessBuilder(name).also { builder ->
-        builder.apply(block)
-        components.add(builder.build())
-      }
-    }
-  }
+  operator fun String.invoke(block: DefinedProcessBuilder.() -> Unit) = this.apply {
+      name = Name.Defined(this).also { name ->
+        definedBuilder = DefinedProcessBuilder(name).also { builder ->
+          builder.apply(block)
+          components.add(builder.build()) } } }
 
 
   class DefinedProcessBuilder(private val name: Name.Defined) {
@@ -37,8 +29,8 @@ class Builder {
      * val a_then_b = "a" then "b"
      * ```
      */
-    infix fun Any.then(other: Any): Dimension = makeBinOp(this, other) { l, r ->
-      Dimension.Time(l, r) }
+    infix fun Any.then(other: Any): Dimension = makeBinOp(this, other) {
+        l, r -> Dimension.Time(l, r) }
 
     /**
      * Constructs a [Dimension.Choice] from **`process1`** and **`process2`**
@@ -48,8 +40,8 @@ class Builder {
      * val a_or_b = "a" or "b"
      * ```
      */
-    infix fun Any.or(other: Any): Dimension = makeBinOp(this, other) { l, r ->
-      Dimension.Choice(l, r) }
+    infix fun Any.or(other: Any): Dimension = makeBinOp(this, other) {
+        l, r -> Dimension.Choice(l, r) }
 
     /**
      * Constructs a [Dimension.Space] from **`process1`** and **`process2`**
@@ -59,18 +51,20 @@ class Builder {
      * val a_and_b = "a" and "b"
      * ```
      */
-    infix fun Any.and(other: Any): Dimension = makeBinOp(this, other) { l, r ->
-      Dimension.Space(l, r) }
+    infix fun Any.and(other: Any): Dimension = makeBinOp(this, other) {
+        l, r -> Dimension.Space(l, r) }
 
     fun build(): Defined {
-      val p = process
-      if (p == null) { throw DSLParseException("Can't build a process with only a name") }
-      else { return Defined(name, p) }
-    }
+      return process?.let { Defined(name, it) }
+        ?: throw DSLParseException("can't build null process") }
 
-    private fun makeBinOp(left: Any, right: Any,
-      create: (l: Process, r: Process) -> Dimension): Dimension {
-      return create(left.asProcess(), right.asProcess()).also { process = it }
+    private fun makeBinOp(
+      left: Any,
+      right: Any,
+      create: (l: Process, r: Process) -> Dimension
+    ): Dimension {
+      return create(left.asProcess(), right.asProcess())
+        .also { process = it }
     }
 
     /**

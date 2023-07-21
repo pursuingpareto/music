@@ -3,31 +3,25 @@ package org.example.pg
 @Suppress("UNCHECKED_CAST")
 class Program(private val namespace: Namespace) {
 
-  private val end = "END"
-  private var f: OnWord = { _: String -> throw UnrunnableProcess("Must 'begin' process")}
+  /**
+   * [f] is a function which gets called and reassigned every time
+   * a [Program] is [invoke]d
+   */
+  private var f: OnWord = { word -> begin(Name.Defined(word)) }
 
-  fun begin(name: String) = begin(Name.Defined(name))
+  operator fun invoke(word: Word) = this
+    .apply {
+      f = when (val fw = this.f(word)) {
+        true -> { w: Word -> if (w == Keyword.END) true else throw ProcessExhausted() }
+        null -> throw NoMatchForInput(word)
+        else -> fw as OnWord } }
 
-  fun end() = invoke(end)
-
-  operator fun invoke(word: String): Program {
-    val fw = this.f(word)
-    this.f = when (fw) {
-      true -> { w: String -> if (w == end) true else throw ProcessExhausted() }
-      null -> throw NoMatchForInput(word)
-      else -> fw as OnWord
-    }
-    return this
-  }
-
-  private fun begin(name: Name.Defined): Program {
-    f = namespace[name] ?: throw NoMatchForInput(name.toString())
-    return this
-  }
+  private fun begin(name: Name.Defined) = namespace[name]?.also { f = it }
+    ?: throw NoMatchForInput(name.toString())
 
   companion object {
-    fun from(
-      grammar: Grammar,
-      expander: Expander = Expanders.equality) = Compiler(expander).compile(grammar)
+    fun from(grammar: Grammar, expander: Expander = Expanders.equality): Program {
+      return Compiler(expander).compile(grammar)
+    }
   }
 }

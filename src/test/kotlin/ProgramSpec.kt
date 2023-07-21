@@ -48,37 +48,37 @@ class ProgramSpec {
     inner class Lifecycle {
 
         @Test
-        fun `programs can begin and transition and end`() {
+        fun `programs can invoke and transition and end`() {
             val grammar = Grammar.fromDsl {
                 "Program" {
-                    "beginning" then "transition" then "finish"
+                    "invokening" then "transition" then "finish"
                 }
             }
 
             // this is good!
             Program.from(grammar)
-                .begin("Program")
-                .invoke("beginning")("transition")("finish")
-                .end()
+                .invoke("Program")
+                .invoke("invokening")("transition")("finish")
+                .invoke("END")
 
             // but it can fail at any of the phases...
-            // like in the beginning:
+            // like in the invokening:
             assertThrows<NoMatchForInput> {
                 Program.from(grammar)
-                    .begin("Pilgrim") }
+                    .invoke("Pilgrim") }
 
             // or in the middle:
             assertThrows<NoMatchForInput> {
                 Program.from(grammar)
-                    .begin("Program")
-                    .invoke("beginning")("finish") }
+                    .invoke("Program")
+                    .invoke("invokening")("finish") }
 
             // or by ending before the process has finished
             assertThrows<NoMatchForInput> {
                 Program.from(grammar)
-                    .begin("Program")
-                    .invoke("beginning")("transition")
-                    .end()
+                    .invoke("Program")
+                    .invoke("invokening")("transition")
+                    .invoke("END")
             }
         }
     }
@@ -88,29 +88,29 @@ class ProgramSpec {
 
         @Test
         fun `simple sequence runs successfully`() {
-            Program.from(ab).begin("AB")("a")("b")
+            Program.from(ab).invoke("AB")("a")("b")
         }
 
         @Test
         fun `simple sequence fails after exhaustion`() {
             assertThrows<UnrunnableProcess> {
-                Program.from(ab).begin("AB")("a")("b")("c")
+                Program.from(ab).invoke("AB")("a")("b")("c")
             }
         }
 
         @Test
         fun `three element sequence runs successfully`() {
-            Program.from(abc).begin("ABC")("a")("b")("c")
+            Program.from(abc).invoke("ABC")("a")("b")("c")
         }
 
         @Test
         fun `three element sequence fails when improperly called`() {
             assertThrows<UnrunnableProcess> {
-                Program.from(abc).begin("ABC")("a")("b")("c")("d")
+                Program.from(abc).invoke("ABC")("a")("b")("c")("d")
             }
 
             assertThrows<UnrunnableProcess> {
-                Program.from(abc).begin("ABC")("a")("b")("d")
+                Program.from(abc).invoke("ABC")("a")("b")("d")
             }
         }
 
@@ -118,18 +118,18 @@ class ProgramSpec {
         inner class WithOptionals {
 
             @Test
-            fun `optional at beginning of sequence is optional`() {
+            fun `optional at invokening of sequence is optional`() {
                 Program.from(optionalAThenB)
-                    .begin("OptionalAThenB")
+                    .invoke("OptionalAThenB")
                     .invoke("a")("b")
 
                 Program.from(optionalAThenB)
-                    .begin("OptionalAThenB")
+                    .invoke("OptionalAThenB")
                     .invoke("b")
 
                 assertThrows<UnrunnableProcess> {
                     Program.from(optionalAThenB)
-                        .begin("OptionalAThenB")
+                        .invoke("OptionalAThenB")
                         .invoke("fail")
                 }
             }
@@ -137,12 +137,12 @@ class ProgramSpec {
             @Test
             fun `optional at end of sequence is optional`() {
                 Program.from(aThenOptionalB)
-                    .begin("AThenOptionalB")
+                    .invoke("AThenOptionalB")
                     .invoke("a")("b")
 
                 assertThrows<UnrunnableProcess> {
                     Program.from(aThenOptionalB)
-                        .begin("AThenOptionalB")
+                        .invoke("AThenOptionalB")
                         .invoke("b")
                 }
             }
@@ -150,14 +150,14 @@ class ProgramSpec {
             @Test
             fun `optional in middle of sequence can be included`() {
                 Program.from(optionalMiddle)
-                    .begin("OptionalMiddle")
+                    .invoke("OptionalMiddle")
                     .invoke("a")("b")("c")
             }
 
             @Test
             fun `optional in middle of sequence can be skipped`() {
                 Program.from(optionalMiddle)
-                    .begin("OptionalMiddle")
+                    .invoke("OptionalMiddle")
                     .invoke("a")("c")
             }
 
@@ -169,38 +169,38 @@ class ProgramSpec {
                     }
                 }
 
-                val begin = { Program.from(grammar).begin("DoubleOptional") }
+                val invoke = { Program.from(grammar).invoke("DoubleOptional") }
 
                 // these are both allowed
-                begin()("a")("b")
-                begin()("b")
+                invoke()("a")("b")
+                invoke()("b")
 
                 // these are not
                 assertThrows<NoMatchForInput> {
-                    begin()("blah") }
+                    invoke()("blah") }
                 assertThrows<ProcessExhausted> {
-                    begin()("a")("b")("c") }
+                    invoke()("a")("b")("c") }
                 assertThrows<NoMatchForInput> {
-                    begin()("a")("c") }
+                    invoke()("a")("c") }
             }
 
             @Test
             fun `three element sequence with optional middle fails when called incorrectly`() {
                 assertThrows<UnrunnableProcess> {
                     Program.from(optionalMiddle)
-                        .begin("OptionalMiddle")
+                        .invoke("OptionalMiddle")
                         .invoke("a")("d")
                 }
 
                 assertThrows<UnrunnableProcess> {
                     Program.from(optionalMiddle)
-                        .begin("OptionalMiddle")
+                        .invoke("OptionalMiddle")
                         .invoke("a")("b")("f")
                 }
 
                 assertThrows<UnrunnableProcess> {
                     Program.from(optionalMiddle)
-                        .begin("OptionalMiddle")
+                        .invoke("OptionalMiddle")
                         .invoke("a")("c")("f")
                 }
             }
@@ -219,23 +219,23 @@ class ProgramSpec {
                 }
             }
 
-            val begin = { Program.from(grammar).begin("Branching") }
+            val invoke = { Program.from(grammar).invoke("Branching") }
 
             // taking the first branch is allowed
-            begin()("a")("b")
+            invoke()("a")("b")
 
             // taking the second branch is allowed
-            begin()("c")("d")
+            invoke()("c")("d")
 
             // but you can't "change your mind" once you've committed to a branch
             assertThrows<NoMatchForInput> {
-                begin()("a")("c") }
+                invoke()("a")("c") }
             assertThrows<NoMatchForInput> {
-                begin()("a")("d") }
+                invoke()("a")("d") }
             assertThrows<NoMatchForInput> {
-                begin()("c")("a") }
+                invoke()("c")("a") }
             assertThrows<NoMatchForInput> {
-                begin()("c")("b") }
+                invoke()("c")("b") }
         }
 
         @Test
@@ -246,10 +246,10 @@ class ProgramSpec {
                     ("c" then "d")
                 } }
 
-            val begin = { Program.from(grammar).begin("Branching") }
+            val invoke = { Program.from(grammar).invoke("Branching") }
 
-            assertThrows<NoMatchForInput> { begin()("b") }
-            assertThrows<NoMatchForInput> { begin()("d") }
+            assertThrows<NoMatchForInput> { invoke()("b") }
+            assertThrows<NoMatchForInput> { invoke()("d") }
         }
 
         @Test
@@ -262,7 +262,7 @@ class ProgramSpec {
                 }
             }
             assertThrows<AmbiguousBranching> {
-                Program.from(grammar).begin("AmbiguousBranch")("a")
+                Program.from(grammar).invoke("AmbiguousBranch")("a")
             }
         }
 
@@ -294,13 +294,13 @@ class ProgramSpec {
                         ({"a"} then "b") or ("b" then "c")
                     }}
 
-                val begin = { Program.from(grammar).begin("Branching") }
+                val invoke = { Program.from(grammar).invoke("Branching") }
 
                 // unambiguous calls are fine
-                begin()("a")("b")
+                invoke()("a")("b")
 
                 // but ambiguous calls fail
-                assertThrows<AmbiguousBranching> { begin()("b") }
+                assertThrows<AmbiguousBranching> { invoke()("b") }
             }
         }
     }
@@ -317,7 +317,7 @@ class ProgramSpec {
                 timings.add(Pair(this, dur / 1000.0))
                 if ("$this" != word) throw NoMatchForInput("Invalid!") else true
             }
-            .begin(RockPaperScissors)
+            .invoke(RockPaperScissors)
             .invoke(rock).also { Thread.sleep(42) }
             .invoke(paper).also { Thread.sleep(33) }
             .invoke(scissors)(shoot)(rock)(win)(celebrate)

@@ -6,54 +6,58 @@ object Expanders {
 }
 
 /**
- * Compiles a [Grammar] into a [Program] with an [Expander]
+ * Compiles a [Grammar] into a runnable [Program].
+ *
+ * Compilation produces a [Program] by converting each [Defined] process into a
+ * single function of type [OnWord].
+ *
+ * Each of these functions can be called by passing it a word
  */
 @Suppress("UNCHECKED_CAST")
 class Compiler(private val expander: Expander = Expanders.equality)  {
 
-    private val namespace: Namespace = mutableMapOf()
+    private val namespace: MutableNamespace = mutableMapOf()
 
     fun compile(grammar: Grammar): Program {
-        grammar.processes.associate { it.name to functionFrom(it) }
+        namespace.clear()
+        grammar.processes.forEach { functionalize(it) }
         return Program(namespace)
     }
 
-    private fun expanding(obj: Name.Expanding): OnWord = { word -> expander(obj, word)}
+    private fun expanding(obj: Name.Expanding): OnWord = {
+        word -> expander(obj, word) }
 
-    private fun optional(process: OnWord) = { word: String ->
-        try { process(word) } catch (e: UnrunnableProcess) { null } }
+    private fun optional(process: OnWord): OnWord = {
+        word -> try { process(word) }
+                catch (e: UnrunnableProcess) { null } }
 
-    private fun decision(a: OnWord, b: OnWord) = { word: String ->
-        val aw = try { a(word) } catch (e: Exception) { false }
-        val bw = try { b(word) } catch (e: Exception) { false }
-        if (aw == false && bw == false) throw NoMatchForInput(word)
-        if (aw != false && bw != false) throw AmbiguousBranching()
-        if (aw == false) bw else aw }
+    private fun decision(a: OnWord, b: OnWord) = { word: Word ->
+        val attempts = listOf(a, b).map {
+            try { it(word) }
+            catch (e: ProcessException) { false } }
+        if (attempts.all  { it == false }) throw NoMatchForInput(word)
+        if (attempts.none { it == false }) throw AmbiguousBranching()
+        if (attempts.first() == false) attempts.last() else attempts.first() }
 
-    private fun ref(name: Name.Defined) = { word: String ->
-        this.namespace[name]?.invoke(word) }
+    private fun ref(name: Name.Defined) = { word: Word ->
+        this.namespace[name]?.invoke(word) ?: throw NoMatchForInput(word) }
 
-    private fun sequence(x: OnWord, y: OnWord): OnWord =   { word: String ->
+    private fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
         when (val xw = x(word)) {
             null -> y(word)
-            true -> { w: String -> y(w) }
-            false -> throw NoMatchForInput(word)
-            else -> sequence(xw as OnWord, y)
-        } }
+            true -> { w: Word -> y(w) }
+            else -> sequence(xw as OnWord, y) } }
 
-    private fun named(p: OnWord, name: Name.Defined): OnWord {
-        this.namespace[name] = p
-        return { word: String -> p(word) } }
+    private fun named(onWord: OnWord, name: Name.Defined): OnWord {
+        this.namespace[name] = onWord
+        return { word: Word -> onWord(word) } }
 
-    private fun functionFrom(process: Process): OnWord {
-        return when (process) {
-            is Dimension.Time   -> sequence(functionFrom(process.tick), functionFrom(process.tock))
-            is Dimension.Choice -> decision(functionFrom(process.left), functionFrom(process.right))
-            is Optional         -> optional(functionFrom(process.process))
-            is Expanding        -> expanding(process.obj)
-            is Defined          -> named(functionFrom(process.process), process.name)
-            is Reference        -> ref(process.referencedName)
-            else                -> throw UnrunnableProcess("not supported ${process}!")
-        }
-    }
+    private fun functionalize(process: Process): OnWord = when (process) {
+        is Dimension.Time   -> sequence(functionalize(process.tick), functionalize(process.tock))
+        is Dimension.Choice -> decision(functionalize(process.left), functionalize(process.right))
+        is Optional         -> optional(functionalize(process.process))
+        is Expanding        -> expanding(process.obj)
+        is Defined          -> named(functionalize(process.process), process.name)
+        is Reference        -> ref(process.referencedName)
+        else                -> throw UnrunnableProcess("not supported ${process}!") }
 }
