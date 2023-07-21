@@ -8,7 +8,7 @@ object Expanders {
 /**
  * Compiles a [Grammar] into a runnable [Program].
  *
- * Compilation produces a [Program] by converting each [Defined] process into a
+ * Compilation produces a [Program] by converting each [Function] process into a
  * single function of type [OnWord].
  *
  * Each of these functions can be called by passing it a word
@@ -57,7 +57,7 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         is Dimension.Choice -> decision(functionalize(process.left), functionalize(process.right))
         is Optional         -> optional(functionalize(process.process))
         is Expanding        -> expanding(process.obj)
-        is Defined          -> named(functionalize(process.process), process.name)
+        is Function         -> named(functionalize(process.process), process.name)
         is Reference        -> ref(process.referencedName)
         else                -> throw UnrunnableProcess("not supported ${process}!") }
 }

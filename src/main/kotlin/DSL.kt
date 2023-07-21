@@ -6,7 +6,7 @@ infix fun Grammar.extend(block: Builder.() -> Unit) = this.extend(Builder().appl
 
 class Builder {
   private var name: Name.Defined? = null
-  private val components = mutableListOf<Defined>()
+  private val components = mutableListOf<Function>()
   private var definedBuilder: DefinedProcessBuilder? = null
 
   fun build() = Grammar(components)
@@ -54,8 +54,8 @@ class Builder {
     infix fun Any.and(other: Any): Dimension = makeBinOp(this, other) {
         l, r -> Dimension.Space(l, r) }
 
-    fun build(): Defined {
-      return process?.let { Defined(name, it) }
+    fun build(): Function {
+      return process?.let { Function(name, it) }
         ?: throw DSLParseException("can't build null process") }
 
     private fun makeBinOp(

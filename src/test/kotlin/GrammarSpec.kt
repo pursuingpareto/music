@@ -66,7 +66,7 @@ class GrammarSpec {
         fun `cannot be child of defined process`() {
             val name = Name.Defined("SomeProcess")
             val a = Expanding("a")
-            assertThrows<RuntimeException> { Defined(name, Optional(a)) }
+            assertThrows<RuntimeException> { Function(name, Optional(a)) }
         }
     }
 
@@ -77,22 +77,22 @@ class GrammarSpec {
         @Test
         fun `can compare names`() {
             val reference = Reference(Name.Defined("A"))
-            val defined = Defined(Name.Defined("A"), ab)
-            assertEquals(reference.referencedName, defined.name)
+            val function = Function(Name.Defined("A"), ab)
+            assertEquals(reference.referencedName, function.name)
         }
 
         @Test
         fun `can access names via Maps`() {
             val reference = Reference(Name.Defined("A"))
-            val defined = Defined(Name.Defined("A"), ab)
-            val map = mapOf(defined.name to defined.process)
+            val function = Function(Name.Defined("A"), ab)
+            val map = mapOf(function.name to function.process)
             val process = map[reference.referencedName]
-            assertEquals(process, defined.process)
+            assertEquals(process, function.process)
         }
 
         @Test
         fun `defined processes cannot contain single expanding process`() {
-            assertThrows<RuntimeException> { Defined(Name.Defined("A"), Expanding("foo")) }
+            assertThrows<RuntimeException> { Function(Name.Defined("A"), Expanding("foo")) }
         }
     }
 
@@ -186,15 +186,15 @@ class GrammarSpec {
         @Test
         fun `defined process names must be unique`() {
             val name = Name.Defined("Example")
-            val d1 = Defined(name, ab)
-            val d2 = Defined(name, cd)
+            val d1 = Function(name, ab)
+            val d2 = Function(name, cd)
             assertThrows<GrammarValidationException> { Grammar(listOf(d1, d2)) }
         }
 
         @Test
         fun `can be extended with other grammars`() {
-            val g1 = Grammar(listOf(Defined(Name.Defined("Foo"), ab)))
-            val g2 = Grammar(listOf(Defined(Name.Defined("Bar"), cd)))
+            val g1 = Grammar(listOf(Function(Name.Defined("Foo"), ab)))
+            val g2 = Grammar(listOf(Function(Name.Defined("Bar"), cd)))
             val g3 = g1 extend g2
             assertEquals(2, g3.processes.count())
         }
@@ -207,7 +207,7 @@ class GrammarSpec {
             assertEquals("a | b", Decision(Expanding("a"), Expanding("b")).canonical())
             assertEquals("a & b", Parallel(Expanding("a"), Expanding("b")).canonical())
 
-            val p1 = Defined(
+            val p1 = Function(
                 Name.Defined("Process1"),
                 Dimension.Time(
                     Expanding("a"),
@@ -217,7 +217,7 @@ class GrammarSpec {
                 : a > b
             """.trimIndent(), p1.canonical())
 
-            val p2 = Defined(
+            val p2 = Function(
                 Name.Defined("Process2"),
                 Reference(Name.Defined("Process1")))
             assertEquals("""

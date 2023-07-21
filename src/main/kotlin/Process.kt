@@ -24,7 +24,7 @@ typealias Parallel = Dimension.Space
  * In this grammar:
  * * the lowercase terms (one, two, etc...) represent [Expanding] processes
  *
- * * the three unindented PascalCase words are the [Names][Name.Defined] of [Defined] processes,
+ * * the three unindented PascalCase words are the [Names][Name.Defined] of [Function] processes,
  * which each have a corresponding `Process` defined below the name.
  *
  * * The ` one | two | three | four | five | six ` is a chain of [Dimension.Choice] processes.
@@ -46,7 +46,7 @@ sealed interface Process {
     is Dimension.Choice -> "${left.canonical()} | ${right.canonical()}"
     is Dimension.Space  -> "${back.canonical()} & ${fore.canonical()}"
     is Dimension.Time   -> "${tick.canonical()} > ${tock.canonical()}"
-    is Defined          -> "$name\n  : ${process.canonical()}"
+    is Function         -> "$name\n  : ${process.canonical()}"
     is Optional         -> "[ ${process.canonical()} ]"
     is Reference        -> referencedName.toString()
     is Expanding        -> obj.toString()
@@ -65,9 +65,9 @@ data class Expanding(val obj: Name.Expanding): Process {
 
 
 /**
- * A reference to a [Defined] process.
+ * A reference to a [Function] process.
  *
- * @param referencedName the [Name.Defined] of the corresponding [Defined] process.
+ * @param referencedName the [Name.Defined] of the corresponding [Function] process.
  */
 data class Reference(val referencedName: Name.Defined): Process
 
@@ -79,7 +79,7 @@ data class Reference(val referencedName: Name.Defined): Process
  * @param name the name of this process.
  * @param process the corresponding process.
  */
-data class Defined(val name: Name.Defined, val process: Process): Process {
+data class Function(val name: Name.Defined, val process: Process): Process {
   init { require(process !is Optional && process !is Expanding) } }
 
 

@@ -1,4 +1,5 @@
 import org.example.pg.*
+import org.example.pg.Function
 import org.example.pg.Sequence
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -68,7 +69,7 @@ class DSLSpec {
                 }
             }
             assertEquals(1, grammar.processes.count())
-            assertIs<Defined>(grammar.processes.first())
+            assertIs<Function>(grammar.processes.first())
             assertEquals("DefinedProcessName", grammar.processes.first().name.toString())
         }
 
