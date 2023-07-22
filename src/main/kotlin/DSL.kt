@@ -1,33 +1,71 @@
 package org.example.pg
 
-fun Grammar.Companion.fromDsl(block: Builder.() -> Unit) = Builder().apply(block).build()
+fun Grammar.Companion.fromDsl(block: GrammarBuilder.() -> Unit) = GrammarBuilder().apply(block).build()
 
-infix fun Grammar.extend(block: Builder.() -> Unit) = this.extend(Builder().apply(block).build())
+infix fun Grammar.extend(block: GrammarBuilder.() -> Unit) = this.extend(GrammarBuilder().apply(block).build())
 
-class Builder {
-  private var name: Name.Defined? = null
-  private val components = mutableListOf<Function>()
-  private var definedBuilder: DefinedProcessBuilder? = null
+interface Builder<T> {
+  fun build(): T
+}
 
-  fun build() = Grammar(components)
+/**
+ * Converts the DSL representation of a [Grammar] to an actual Grammar.
+ *
+ * The following code will produce a Grammar with two [Fn.Definition]s:
+ *
+ * ```kotlin
+ * "Repeated"("process") {
+ *   "process" then "Repeated"("process")
+ * }
+ *
+ * "Heart" {
+ *   "Repeated"("beat")
+ * }
+ * ```
+ */
+class GrammarBuilder: Builder<Grammar> {
+  private var name: Fn.Name? = null
+  private val components = mutableListOf<Fn.Definition>()
+  private var definedBuilder: FunctionDefinitionBuilder? = null
 
-  operator fun String.invoke(vararg args: RequiredArg, block: DefinedProcessBuilder.() -> Unit) = this.apply {
-      name = Name.Defined(this).also { name ->
-        definedBuilder = DefinedProcessBuilder(name, args).also { builder ->
+  override fun build() = Grammar(components)
+
+  operator fun String.invoke(vararg args: RequiredArg, block: FunctionDefinitionBuilder.() -> Unit) = this.apply {
+      name = Fn.Name(this).also { name ->
+        definedBuilder = FunctionDefinitionBuilder(name, args).also { builder ->
           builder.apply(block)
           components.add(builder.build()) } } }
 
 
-  class DefinedProcessBuilder(
-    private val name: Name.Defined,
-    args: Array<out RequiredArg>? = null) {
+  /**
+   * Converts the DSL representation of a [Fn.Definition] to an actual definition.
+   *
+   * The following code will produce a Fn.Definition:
+   *
+   * ```kotlin
+   * "Repeated"("process") {
+   *   "process" then "Repeated"("process")
+   * }
+   * ```
+   */
+  class FunctionDefinitionBuilder(
+    private val name: Fn.Name,
+    args: Array<out RequiredArg>? = null
+  ): Builder<Fn.Definition> {
     private val args = args?.toList() ?: listOf()
     private var process: Process? = null
 
-    operator fun String.invoke(vararg maybeParams: Any): Reference {
+    /**
+     * Converts `"Foo"("a")` to a [Fn.Call] with single param `Expanding("a")`
+     */
+    operator fun String.invoke(vararg maybeParams: Any): Fn.Call {
       val params = maybeParams.map { it.asProcess() }
-      return Reference(Name.Defined(this), params)
+      return Fn.Call(Fn.Name(this), params)
     }
+
+    override fun build(): Fn.Definition = process?.let {
+      Fn.Definition(name, it, args)
+    } ?: throw DSLParseException("can't build null process")
 
     /**
      * Constructs a [Dimension.Time] from **`process1`** and **`process2`**
@@ -37,8 +75,10 @@ class Builder {
      * val a_then_b = "a" then "b"
      * ```
      */
-    infix fun Any.then(other: Any): Dimension = makeBinOp(this, other) {
-        l, r -> Dimension.Time(l, r) }
+    infix fun Any.then(that: Any) = assignToProcess {
+      Dimension.Time(this.asProcess(), that.asProcess())
+    }
+
 
     /**
      * Constructs a [Dimension.Choice] from **`process1`** and **`process2`**
@@ -48,8 +88,9 @@ class Builder {
      * val a_or_b = "a" or "b"
      * ```
      */
-    infix fun Any.or(other: Any): Dimension = makeBinOp(this, other) {
-        l, r -> Dimension.Choice(l, r) }
+    infix fun Any.or(that: Any) = assignToProcess {
+      Dimension.Choice(this.asProcess(), that.asProcess())
+    }
 
     /**
      * Constructs a [Dimension.Space] from **`process1`** and **`process2`**
@@ -59,50 +100,42 @@ class Builder {
      * val a_and_b = "a" and "b"
      * ```
      */
-    infix fun Any.and(other: Any): Dimension = makeBinOp(this, other) {
-        l, r -> Dimension.Space(l, r) }
+    infix fun Any.and(that: Any) = assignToProcess {
+      Dimension.Space(this.asProcess(), that.asProcess())
+    }
 
-    fun build(): Function {
-      return process?.let { Function(name, it, args) }
-        ?: throw DSLParseException("can't build null process") }
-
-    private fun makeBinOp(
-      left: Any,
-      right: Any,
-      create: (l: Process, r: Process) -> Dimension
-    ): Dimension {
-      return create(left.asProcess(), right.asProcess())
-        .also { process = it }
+    private fun assignToProcess(block: () -> Process): Process {
+      return block().also { process = it }
     }
 
     /**
      * Coerces receiver of [Any] type to [Process]. Fails unless receiver is
      * [String], [Process], or a 0-arity function.
      *
-     * When the receiver is a [Function], call it and return an [Optional] with
+     * When the receiver is a zero-arity function, call it and return an [Optional] with
      * child `process` equal to the coerced return value.
      *
-     * When receiver is a String, first try to coerce it to a [Reference].
+     * When receiver is a String, first try to coerce it to a [Fn.Call].
      * If this fails (which will happen if the string is not PascalCase), then
-     * coerce to a [Expanding] process.
+     * coerce to an [Expanding] process.
      */
-    @Suppress("UNCHECKED_CAST")
-    private fun Any.asProcess(): Process {
-      var arg = this
-      var optional = false
-      if (arg is Function0<*>) {
-        optional = true
-        arg = arg.invoke() as Any
-      }
-      if (arg is String) {
-        arg = try {
-          Reference(Name.Defined(arg)) }
-        catch (ex: IllegalArgumentException) {
-          Expanding(arg) }
-      }
-      if (arg !is Process) { throw DSLParseException("could not convert $arg to Process") }
-      if (optional) { arg = Optional(arg) }
-      return arg as? Process ?: throw DSLParseException("could not convert $arg to Process>")
+    private fun Any.asProcess(): Process = when(this) {
+      is Function0<*> -> asProcess()
+      is String       -> asProcess()
+      is Process      -> this
+      else            -> throw DSLParseException("could not convert $this to Process")
+    }
+
+    private fun Function0<*>.asProcess(): Optional {
+      return invoke()?.asProcess()
+        ?.let { Optional(it) }
+        ?: throw DSLParseException("can't convert function to process")
+    }
+
+    private fun String.asProcess() = try {
+      Fn.Call(Fn.Name(this)) }
+    catch (_: IllegalArgumentException) {
+      Expanding(this)
     }
   }
 }

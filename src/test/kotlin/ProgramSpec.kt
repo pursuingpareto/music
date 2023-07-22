@@ -307,7 +307,7 @@ class ProgramSpec {
 
     @Test
     fun `the compiler can be modified to add additional functionality`() {
-        val timings = mutableListOf<Pair<Name, Double>>()
+        val timings = mutableListOf<Pair<ProcessName, Double>>()
         var start = System.nanoTime()
         Program
             .from(RPSGrammar) { word ->

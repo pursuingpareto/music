@@ -8,7 +8,7 @@ object Expanders {
 /**
  * Compiles a [Grammar] into a runnable [Program].
  *
- * Compilation produces a [Program] by converting each [Function] process into a
+ * Compilation produces a [Program] by converting each [Fn.Definition] process into a
  * single function of type [OnWord].
  *
  * Each of these functions can be called by passing it a word
@@ -24,7 +24,7 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         return Program(namespace)
     }
 
-    private fun expanding(obj: Name.Expanding): OnWord = {
+    private fun expanding(obj: Expanding.Name): OnWord = {
         word -> expander(obj, word) }
 
     private fun optional(process: OnWord): OnWord = {
@@ -39,7 +39,7 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         if (attempts.none { it == false }) throw AmbiguousBranching()
         if (attempts.first() == false) attempts.last() else attempts.first() }
 
-    private fun reference(name: Name.Defined, params: List<Param>) = { word: Word ->
+    private fun reference(name: Fn.Name, params: List<Param>) = { word: Word ->
         this.namespace[name]?.invoke(word) ?: throw NoMatchForInput(word) }
 
     private fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
@@ -50,19 +50,19 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
 
     private fun named(
         onWord: OnWord,
-        name: Name.Defined
+        name: Fn.Name
     ): OnWord {
         this.namespace[name] = onWord
         return { word: Word -> onWord(word) } }
 
     private fun Process.functionalize(
-        params: Map<Name.Expanding, Param> = mapOf()
+        params: Map<Expanding.Name, Param> = mapOf()
     ): OnWord = when (this) {
         is Dimension.Time   -> sequence(tick.functionalize(params), tock.functionalize(params))
-        is Dimension.Choice -> decision(left.functionalize(params), right.functionalize(params))
+        is Dimension.Choice -> decision(will.functionalize(params), wont.functionalize(params))
         is Optional         -> optional(process.functionalize(params))
         is Expanding        -> params[obj]?.functionalize(params) ?: expanding(obj)
-        is Function         -> named(process.functionalize(params), name)
-        is Reference        -> reference(referencedName, this.params)
+        is Fn.Definition    -> named(process.functionalize(params), name)
+        is Fn.Call          -> reference(referencedName, this.params)
         else                -> throw UnrunnableProcess("not supported ${this}!") }
 }

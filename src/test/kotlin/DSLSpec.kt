@@ -1,24 +1,22 @@
 import org.example.pg.*
-import org.example.pg.Function
 import org.example.pg.Sequence
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import javax.swing.text.html.parser.Parser
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 class DSLSpec {
 
-    private fun fromBuilder(block: Builder.DefinedProcessBuilder.() -> Unit): Process {
+    private fun fromBuilder(block: GrammarBuilder.FunctionDefinitionBuilder.() -> Unit): Process {
         val builder = builder()
         builder.apply(block)
         return builder.build().process
     }
 
-    private fun builder(): Builder.DefinedProcessBuilder {
-        val name = Name.Defined("SomeName")
-        return Builder.DefinedProcessBuilder(name)
+    private fun builder(): GrammarBuilder.FunctionDefinitionBuilder {
+        val name = Fn.Name("SomeName")
+        return GrammarBuilder.FunctionDefinitionBuilder(name)
     }
 
     @Nested
@@ -58,8 +56,8 @@ class DSLSpec {
         @Test
         fun `references are PascalCase strings`() {
             val process = fromBuilder { "ProcessA" then "ProcessB" } as Sequence
-            assertIs<Reference>(process.tick)
-            assertIs<Reference>(process.tock)
+            assertIs<Fn.Call>(process.tick)
+            assertIs<Fn.Call>(process.tock)
         }
 
         @Test
@@ -70,7 +68,7 @@ class DSLSpec {
                 }
             }
             assertEquals(1, grammar.processes.count())
-            assertIs<Function>(grammar.processes.first())
+            assertIs<Fn.Definition>(grammar.processes.first())
             assertEquals("DefinedProcessName", grammar.processes.first().name.toString())
         }
 
@@ -94,12 +92,12 @@ class DSLSpec {
     inner class Optionals {
         @Test
         fun `can multi-enclose tail of complex subprocesses`() {
-            val name = Name.Defined("Complex")
-            val builder = Builder.DefinedProcessBuilder(name)
-            with(builder) {
+            val name = Fn.Name("Complex")
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 "a" then { "b" or "c" and "d" }
             }
-            val process = builder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             assertIs<Expanding>(process.tick)
             assertIs<Optional>(process.tock)
@@ -107,12 +105,12 @@ class DSLSpec {
 
         @Test
         fun `can multi-enclose head of complex subprocesses`() {
-            val name = Name.Defined("Complex")
-            val builder = Builder.DefinedProcessBuilder(name)
-            with(builder) {
+            val name = Fn.Name("Complex")
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 { "a" then "b" or "c" } and "d"
             }
-            val process = builder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Parallel>(process)
             assertIs<Expanding>(process.fore)
             assertIs<Optional>(process.back)
@@ -121,12 +119,12 @@ class DSLSpec {
         @Test
         fun `cannot be top-level child of defined process`() {
             assertThrows<DSLParseException> {
-                val name = Name.Defined("Complex")
-                val builder = Builder.DefinedProcessBuilder(name)
-                with(builder) {
+                val name = Fn.Name("Complex")
+                val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+                with(grammarBuilder) {
                     { "a" then "b" or "c" and "d" }
                 }
-                val process = builder.build().process
+                val process = grammarBuilder.build().process
                 assertIs<Optional>(process)
             }
         }
@@ -136,12 +134,12 @@ class DSLSpec {
     inner class ParseOrdering {
         @Test
         fun `is left-heavy by default`() {
-            val name = Name.Defined("MultiSequence")
-            val builder = Builder.DefinedProcessBuilder(name)
-            with(builder) {
+            val name = Fn.Name("MultiSequence")
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 "a" then "b" then "c" then "d"
             }
-            val process = builder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             val tick = process.tick
             val tock = process.tock
@@ -163,12 +161,12 @@ class DSLSpec {
 
         @Test
         fun `is still left-heavy with appropriate parentheses`() {
-            val name = Name.Defined("MultiSequence")
-            val builder = Builder.DefinedProcessBuilder(name)
-            with(builder) {
+            val name = Fn.Name("MultiSequence")
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 ( ( "a" then "b" ) then "c") then "d"
             }
-            val process = builder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             val tick = process.tick
             val tock = process.tock
@@ -190,12 +188,12 @@ class DSLSpec {
 
         @Test
         fun `is right-heavy with appropriate parentheses`() {
-            val name = Name.Defined("MultiSequence")
-            val builder = Builder.DefinedProcessBuilder(name)
-            with(builder) {
+            val name = Fn.Name("MultiSequence")
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 "a" then ("b"  then ("c" then "d"))
             }
-            val process = builder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             val tick = process.tick
             val tock = process.tock

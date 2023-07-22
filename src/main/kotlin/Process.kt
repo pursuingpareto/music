@@ -24,31 +24,28 @@ typealias Parallel = Dimension.Space
  * In this grammar:
  * * the lowercase terms (one, two, etc...) represent [Expanding] processes
  *
- * * the three unindented PascalCase words are the [Names][Name.Defined] of [Function] processes,
+ * * the three unindented PascalCase words are the [Names][Fn.Name] of [Fn.Definition] processes,
  * which each have a corresponding `Process` defined below the name.
  *
  * * The ` one | two | three | four | five | six ` is a chain of [Dimension.Choice] processes.
  *
  * * The ` RollDie > RollDie ` in `RollTwice` is a [Dimension.Time] where both steps are identical. The
- * steps are [References][Reference] to the `RollDie` process.
+ * steps are [References][Fn.Call] to the `RollDie` process.
  *
  * * The ` RollTwoDice ` process is meant to represent *simultaneous* throwing of two dice. We use a
  * [Dimension.Space] process (`RollDie & RollDie`) to represent these concurrent processes.
  */
 sealed interface Process {
-
-
-
   /**
    * Produces a canonical, language-agnostic string representation of this process.
    */
   fun canonical(): String = when(this) {
-    is Dimension.Choice -> "${left.canonical()} | ${right.canonical()}"
+    is Dimension.Choice -> "${will.canonical()} | ${wont.canonical()}"
     is Dimension.Space  -> "${back.canonical()} & ${fore.canonical()}"
     is Dimension.Time   -> "${tick.canonical()} > ${tock.canonical()}"
-    is Function         -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
+    is Fn.Definition    -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
     is Optional         -> "[ ${process.canonical()} ]"
-    is Reference        -> "$referencedName(${params.map {it.canonical()}.joinToString()})"
+    is Fn.Call          -> "$referencedName(${params.joinToString { it.canonical() }})"
     is Expanding        -> obj.toString()
   }
 }
@@ -59,33 +56,49 @@ sealed interface Process {
  *
  * @param obj A serial representation of this terminal "object".
  */
-data class Expanding(val obj: Name.Expanding): Process {
-  constructor(name: String): this(Name.Expanding(name))
+data class Expanding(val obj: Name): Process {
+  constructor(name: String): this(Name(name))
+
+  class Name(name: String): ProcessName(name) {
+    init {
+      require(!name.isPascalCase())
+      require(name.isNotEmpty())
+    }
+  }
 }
 
 
-/**
- * A reference to a [Function] process.
- *
- * @param referencedName the [Name.Defined] of the corresponding [Function] process.
- */
-data class Reference(
-  val referencedName: Name.Defined,
-  val params: List<Param> = listOf()): Process
+sealed interface Fn: Process {
+
+  class Name(name: String): ProcessName(name) {
+    init { require(name.isPascalCase()) }
+  }
+
+  /**
+   * A reference to a [Definition] process.
+   *
+   * @param referencedName the [Fn.Name] of the corresponding [Definition] process.
+   */
+  data class Call(
+    val referencedName: Name,
+    val params: List<Param> = listOf()): Fn
 
 
-/**
- * A process with a [Name.Defined] which can be referred to by a [Reference]. Names
- * must be unique within a [Grammar].
- *
- * @param name the name of this process.
- * @param process the corresponding process.
- */
-data class Function(
-  val name: Name.Defined,
-  val process: Process,
-  val requiredArgs: List<RequiredArg> = listOf()): Process {
-  init { require(process !is Optional && process !is Expanding) } }
+  /**
+   * A process with a [Fn.Name] which can be referred to by a [Call]. Names
+   * must be unique within a [Grammar].
+   *
+   * @param name the name of this process.
+   * @param process the corresponding process.
+   */
+  data class Definition(
+    val name: Name,
+    val process: Process,
+    val requiredArgs: List<RequiredArg> = listOf()): Process {
+    init { require(process !is Optional && process !is Expanding) } }
+}
+
+
 
 
 /**
@@ -110,6 +123,10 @@ sealed class Dimension(
   private val a: Process,
   private val b: Process): Process {
 
+  infix fun Process.then(that: Process) = Time(this, that)
+  infix fun Process.or  (that: Process) = Choice(this, that)
+  infix fun Process.and (that: Process) = Space(this, that)
+
 
   /**
    * ## `a > b`
@@ -130,13 +147,13 @@ sealed class Dimension(
    *
    * A fork in the road for process evaluation. There are two choices:
    *
-   * @param left the first choice
-   * @param right the second choice
+   * @param will the first choice
+   * @param wont the second choice
    */
   data class Choice(
-    val left: Process,
-    val right: Process): Dimension(left, right) {
-      init { require(left !is Optional && right !is Optional) } }
+    val will: Process,
+    val wont: Process): Dimension(will, wont) {
+      init { require(will !is Optional && wont !is Optional) } }
 
 
   /**

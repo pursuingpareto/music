@@ -9,20 +9,20 @@ typealias RequiredArg = String
 
 typealias Param = Process
 
-typealias Expander = Name.Expanding.(String) -> Any?
+typealias Expander = Expanding.Name.(String) -> Any?
 
-typealias MutableNamespace = MutableMap<Name.Defined, OnWord>
+typealias MutableNamespace = MutableMap<Fn.Name, OnWord>
 
-typealias Namespace = Map<Name.Defined, OnWord>
+typealias Namespace = Map<Fn.Name, OnWord>
 
 object Keyword {
-    val END = "END"
+    const val END = "END"
 }
 
 /**
- * A name for a [Defined] process. Must be PascalCase.
+ * A name for a process.
  */
-sealed class Name(private val name: String) {
+sealed class ProcessName(private val name: String) {
     override fun toString() = name
 
     protected fun String.isPascalCase() = "^([A-Z][a-z0-9]*)+$".toRegex().containsMatchIn(this)
@@ -31,21 +31,8 @@ sealed class Name(private val name: String) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Name) return false
+        if (other !is ProcessName) return false
         if (name != other.name) return false
         return true
-    }
-
-
-    class Defined(name: String): Name(name) {
-        init { require(name.isPascalCase()) }
-    }
-
-
-    class Expanding(name: String): Name(name) {
-        init {
-            require(!name.isPascalCase())
-            require(name.isNotEmpty())
-        }
     }
 }

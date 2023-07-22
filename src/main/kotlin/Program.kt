@@ -7,7 +7,7 @@ class Program(private val namespace: Namespace) {
    * [f] is a function which gets called and reassigned every time
    * a [Program] is [invoke]d
    */
-  private var f: OnWord = { word -> begin(Name.Defined(word)) }
+  private var f: OnWord = { word -> begin(Fn.Name(word)) }
 
   operator fun invoke(word: Word) = this
     .apply {
@@ -16,7 +16,7 @@ class Program(private val namespace: Namespace) {
         null -> throw NoMatchForInput(word)
         else -> fw as OnWord } }
 
-  private fun begin(name: Name.Defined) = namespace[name]?.also { f = it }
+  private fun begin(name: Fn.Name) = namespace[name]?.also { f = it }
     ?: throw NoMatchForInput(name.toString())
 
   companion object {

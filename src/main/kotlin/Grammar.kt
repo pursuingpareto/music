@@ -1,9 +1,9 @@
 package org.example.pg
 
 /**
- * A collection of [Function] processes which together define a language of possible programs.
+ * A collection of [Fn.Definition] processes which together define a language of possible programs.
  */
-class Grammar(val processes: List<Function>) {
+class Grammar(val processes: List<Fn.Definition>) {
 
   init { validateGrammar(processes) }
 
@@ -21,23 +21,23 @@ class Grammar(val processes: List<Function>) {
 
   companion object {
 
-    fun validateGrammar(components: List<Function>) {
+    fun validateGrammar(components: List<Fn.Definition>) {
       validateAtLeastOneComponent(components)
       validateUniqueNames(components)
 //      validateSufficientParams()
-      
+
     }
 
-    private fun validateSufficientParams() {
-      TODO("Not yet implemented")
-    }
+//    private fun validateSufficientParams() {
+//      TODO("Not yet implemented")
+//    }
 
-    private fun validateAtLeastOneComponent(components: List<Function>) {
+    private fun validateAtLeastOneComponent(components: List<Fn.Definition>) {
       if (components.isEmpty()) throw GrammarValidationException("cannot create grammar with zero processes")
     }
 
-    private fun validateUniqueNames(components: List<Function>) {
-      fun message(name: Name, count: Int) = "$name defined $count times"
+    private fun validateUniqueNames(components: List<Fn.Definition>) {
+      fun message(name: ProcessName, count: Int) = "$name defined $count times"
       val errors = components
         .map { it.name }
         .groupingBy { it }
