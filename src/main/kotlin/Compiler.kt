@@ -63,6 +63,6 @@ class Compiler(private val expander: Expander = Expanders.equality)  {
         is Optional         -> optional(process.functionalize(params))
         is Expanding        -> params[obj]?.functionalize(params) ?: expanding(obj)
         is Fn.Definition    -> named(process.functionalize(params), name)
-        is Fn.Call          -> reference(referencedName, this.params)
+        is Fn.Call          -> reference(name, this.params)
         else                -> throw UnrunnableProcess("not supported ${this}!") }
 }

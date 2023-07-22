@@ -78,7 +78,7 @@ class GrammarSpec {
         fun `can compare names`() {
             val call = Fn.Call(Fn.Name("A"))
             val definition = Fn.Definition(Fn.Name("A"), ab)
-            assertEquals(call.referencedName, definition.name)
+            assertEquals(call.name, definition.name)
         }
 
         @Test
@@ -86,7 +86,7 @@ class GrammarSpec {
             val call = Fn.Call(Fn.Name("A"))
             val definition = Fn.Definition(Fn.Name("A"), ab)
             val map = mapOf(definition.name to definition.process)
-            val process = map[call.referencedName]
+            val process = map[call.name]
             assertEquals(process, definition.process)
         }
 

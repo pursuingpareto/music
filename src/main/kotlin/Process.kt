@@ -45,7 +45,7 @@ sealed interface Process {
     is Dimension.Time   -> "${tick.canonical()} > ${tock.canonical()}"
     is Fn.Definition    -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
     is Optional         -> "[ ${process.canonical()} ]"
-    is Fn.Call          -> "$referencedName(${params.joinToString { it.canonical() }})"
+    is Fn.Call          -> "$name(${params.joinToString { it.canonical() }})"
     is Expanding        -> obj.toString()
   }
 }
@@ -70,6 +70,8 @@ data class Expanding(val obj: Name): Process {
 
 sealed interface Fn: Process {
 
+  val name: Name
+
   class Name(name: String): ProcessName(name) {
     init { require(name.isPascalCase()) }
   }
@@ -77,11 +79,12 @@ sealed interface Fn: Process {
   /**
    * A reference to a [Definition] process.
    *
-   * @param referencedName the [Fn.Name] of the corresponding [Definition] process.
+   * @param name the [Fn.Name] of the corresponding [Definition] process.
    */
   data class Call(
-    val referencedName: Name,
-    val params: List<Param> = listOf()): Fn
+    override val name: Name,
+    val params: List<Param> = listOf()
+  ): Fn
 
 
   /**
@@ -92,13 +95,12 @@ sealed interface Fn: Process {
    * @param process the corresponding process.
    */
   data class Definition(
-    val name: Name,
+    override val name: Name,
     val process: Process,
-    val requiredArgs: List<RequiredArg> = listOf()): Process {
+    val requiredArgs: List<RequiredArg> = listOf()
+  ): Fn {
     init { require(process !is Optional && process !is Expanding) } }
 }
-
-
 
 
 /**

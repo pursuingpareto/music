@@ -91,7 +91,7 @@ class FunctionSpec {
             assertEquals("bar", body.tock.canonical())
             val tick = body.tick
             assertIs<Fn.Call>(tick)
-            assertEquals("Function", tick.referencedName.toString())
+            assertEquals("Function", tick.name.toString())
             assertEquals("Function(foo)" , tick.params.first().canonical())
         }
     }
