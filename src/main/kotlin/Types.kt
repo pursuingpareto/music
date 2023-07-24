@@ -1,8 +1,6 @@
 package org.example.pg
 
 
-typealias OnWord = (Word) -> Any?
-
 typealias Word = String
 
 typealias RequiredArg = String

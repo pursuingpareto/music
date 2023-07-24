@@ -41,7 +41,7 @@ class FunctionSpec {
         }
 
         @Test
-        fun `parameter passing works`() = todo {
+        fun `parameter passing works`()  {
             val grammar = Grammar.fromDsl {
                 "Function"("a") {
                     "a" then "b"
@@ -51,7 +51,12 @@ class FunctionSpec {
                     "Function"("foo") then "bar"
                 }
             }
-            Program.from(grammar)("Caller")("foo")("b")("bar")("END")
+            val prog = Program.from(grammar)
+            prog("Caller")
+            prog("foo")
+            prog("b")
+            prog("bar")
+            prog("END")
         }
 
         @Test

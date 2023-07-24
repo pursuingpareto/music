@@ -1,6 +1,5 @@
 package org.example.pg
 
-@Suppress("UNCHECKED_CAST")
 class Program(private val namespace: Namespace) {
 
   /**
@@ -20,8 +19,12 @@ class Program(private val namespace: Namespace) {
     ?: throw NoMatchForInput(name.toString())
 
   companion object {
-    fun from(grammar: Grammar, expander: Expander = Expanders.equality): Program {
-      return Compiler(expander).compile(grammar)
+//    fun from(grammar: Grammar, expander: Expander = Expanders.equality): Program {
+//      return Compiler(expander).compile(grammar)
+//    }
+
+    fun from(grammar: Grammar): Program {
+      return Program(GrammarContext(grammar).functionNamespace.mapValues { it.value() })
     }
   }
 }

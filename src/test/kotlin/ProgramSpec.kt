@@ -305,23 +305,23 @@ class ProgramSpec {
         }
     }
 
-    @Test
-    fun `the compiler can be modified to add additional functionality`() {
-        val timings = mutableListOf<Pair<ProcessName, Double>>()
-        var start = System.nanoTime()
-        Program
-            .from(RPSGrammar) { word ->
-                val now = System.nanoTime()
-                val dur = now - start
-                start = now
-                timings.add(Pair(this, dur / 1000.0))
-                if ("$this" != word) throw NoMatchForInput("Invalid!") else true
-            }
-            .invoke(RockPaperScissors)
-            .invoke(rock).also { Thread.sleep(42) }
-            .invoke(paper).also { Thread.sleep(33) }
-            .invoke(scissors)(shoot)(rock)(win)(celebrate)
-
-        assertEquals(11, timings.count())
-    }
+//    @Test
+//    fun `the compiler can be modified to add additional functionality`() {
+//        val timings = mutableListOf<Pair<ProcessName, Double>>()
+//        var start = System.nanoTime()
+//        Program
+//            .from(RPSGrammar) { word ->
+//                val now = System.nanoTime()
+//                val dur = now - start
+//                start = now
+//                timings.add(Pair(this, dur / 1000.0))
+//                if ("$this" != word) throw NoMatchForInput("Invalid!") else true
+//            }
+//            .invoke(RockPaperScissors)
+//            .invoke(rock).also { Thread.sleep(42) }
+//            .invoke(paper).also { Thread.sleep(33) }
+//            .invoke(scissors)(shoot)(rock)(win)(celebrate)
+//
+//        assertEquals(11, timings.count())
+//    }
 }
