@@ -56,13 +56,15 @@ class ProgramSpec {
             // like in the invokening:
             assertThrows<NoMatchForInput> {
                 Program.from(grammar)
-                    .invoke("Pilgrim") }
+                    .invoke("Pilgrim")
+            }
 
             // or in the middle:
             assertThrows<NoMatchForInput> {
                 Program.from(grammar)
                     .invoke("Program")
-                    .invoke("invokening")("finish") }
+                    .invoke("invokening")("finish")
+            }
 
             // or by ending before the process has finished
             assertThrows<NoMatchForInput> {
@@ -168,11 +170,14 @@ class ProgramSpec {
 
                 // these are not
                 assertThrows<NoMatchForInput> {
-                    invoke()("blah") }
+                    invoke()("blah")
+                }
                 assertThrows<ProcessExhausted> {
-                    invoke()("a")("b")("c") }
+                    invoke()("a")("b")("c")
+                }
                 assertThrows<NoMatchForInput> {
-                    invoke()("a")("c") }
+                    invoke()("a")("c")
+                }
             }
 
             @Test
@@ -206,7 +211,7 @@ class ProgramSpec {
             val grammar = Grammar.compose {
                 "Branching" {
                     ("a" then "b") or
-                    ("c" then "d")
+                        ("c" then "d")
                 }
             }
 
@@ -220,13 +225,17 @@ class ProgramSpec {
 
             // but you can't "change your mind" once you've committed to a branch
             assertThrows<NoMatchForInput> {
-                invoke()("a")("c") }
+                invoke()("a")("c")
+            }
             assertThrows<NoMatchForInput> {
-                invoke()("a")("d") }
+                invoke()("a")("d")
+            }
             assertThrows<NoMatchForInput> {
-                invoke()("c")("a") }
+                invoke()("c")("a")
+            }
             assertThrows<NoMatchForInput> {
-                invoke()("c")("b") }
+                invoke()("c")("b")
+            }
         }
 
         @Test
@@ -234,8 +243,9 @@ class ProgramSpec {
             val grammar = Grammar.compose {
                 "Branching" {
                     ("a" then "b") or
-                    ("c" then "d")
-                } }
+                        ("c" then "d")
+                }
+            }
 
             val invoke = { Program.from(grammar).invoke("Branching") }
 
@@ -249,7 +259,7 @@ class ProgramSpec {
             val grammar = Grammar.compose {
                 "AmbiguousBranch" {
                     ("a" then "b") or
-                    ("a" then "c")
+                        ("a" then "c")
                 }
             }
             assertThrows<AmbiguousBranching> {
@@ -261,37 +271,58 @@ class ProgramSpec {
          * Branches may not be optional. But they might contain optionals.
          */
         @Nested
-        inner class InvolvingOptionals {
+        inner class InvolvingEmpty {
 
             @Test
-            fun `branches may not be optional`() {
+            fun `left branch may not be empty`() {
                 assertThrows<RuntimeException> {
-                    Program.from(Grammar.compose {
-                        "OptionalBranch" {
-                            { "a" } or "b"
-                        }})}
+                    Program.from(
+                        Grammar.compose {
+                            "OptionalBranch" {
+                                "" or ""
+                            }
+                        },
+                    )
+                }
 
                 assertThrows<RuntimeException> {
-                    Program.from(Grammar.compose {
+                    Program.from(
+                        Grammar.compose {
+                            "OptionalBranch" {
+                                "" or { "a" }
+                            }
+                        },
+                    )
+                }
+
+                Program.from(
+                    Grammar.compose {
                         "OptionalBranch" {
-                            "a" or { "b" }
-                        }})}
+                            "a" or ""
+                        }
+                    },
+                )
             }
 
             @Test
             fun `sequence branches with optionals fail at runtime when ambiguous`() {
                 val grammar = Grammar.compose {
                     "Branching" {
-                        ({"a"} then "b") or ("b" then "c")
-                    }}
+                        ({ "a" } then "b") or ("b" then "c")
+                    }
+                }
 
-                val invoke = { Program.from(grammar).invoke("Branching") }
+                val prog = Program.from(grammar).invoke("Branching")
 
                 // unambiguous calls are fine
-                invoke()("a")("b")
+                prog.invoke("a")("b")("END")
 
                 // but ambiguous calls fail
-                assertThrows<AmbiguousBranching> { invoke()("b") }
+                assertThrows<ProcessExhausted> { prog.invoke("b") }
+
+                val prog2 = Program.from(grammar).invoke("Branching")
+
+                assertThrows<AmbiguousBranching> { prog2("b") }
             }
         }
     }

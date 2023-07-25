@@ -21,21 +21,15 @@ typealias ArgMap = Map<Fn.Name, List<Expanding.Name>>
 interface Context {
 
     /**
+     * Compiles a [Process.Empty] process into an [OnWord] function.
+     */
+    fun empty(): OnWord = { null }
+
+    /**
      * Compiles an [Expanding] process into an [OnWord] function.
      */
     fun expanding(name: Expanding.Name): OnWord {
         return { input -> ("$name" == input) || throw NoMatchForInput("$input/$name") }
-    }
-
-    /**
-     * Compiles an [Optional] process into an [OnWord] function.
-     */
-    fun optional(process: OnWord): OnWord = { word ->
-        try {
-            process(word)
-        } catch (e: UnrunnableProcess) {
-            null
-        }
     }
 
     /**
@@ -50,7 +44,15 @@ interface Context {
             }
         }
         if (attempts.all { it == false }) throw NoMatchForInput(word)
-        if (attempts.none { it == false }) throw AmbiguousBranching()
+        if (attempts.none { it == false }) {
+            if (attempts.first() == null && attempts.last() == true) {
+                attempts.last()
+            } else if (attempts.last() == null && attempts.first() == true) {
+                attempts.first()
+            } else {
+                throw AmbiguousBranching()
+            }
+        }
         if (attempts.first() == false) attempts.last() else attempts.first()
     }
 
@@ -73,8 +75,8 @@ interface Context {
  * [Fn.Call] processes.
  */
 open class GrammarContext(
-    protected val grammar: Grammar
-): Context {
+    protected val grammar: Grammar,
+) : Context {
 
     private val functionArgs: ArgMap =
         grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Expanding.Name(arg) } }
@@ -82,9 +84,9 @@ open class GrammarContext(
     val functionNamespace: Globals =
         grammar.definitions.associate { it.name to { it.process.compile() } }
 
-    private fun Process.compile(): OnWord = when(this) {
+    private fun Process.compile(): OnWord = when (this) {
         is Expanding -> expanding(obj)
-        is Optional -> optional(process.compile())
+        is Process.Empty -> empty()
         is Dimension.Choice -> decision(Will.compile(), Wont.compile())
         is Dimension.Space -> throw NotImplementedError("Parallel processes not yet supported")
         is Dimension.Time -> sequence(Tick.compile(), Tock.compile())
@@ -134,7 +136,7 @@ open class GrammarContext(
     inner class FunctionContext(
         private val name: Fn.Name,
         private val locals: Locals,
-    ): GrammarContext(grammar) {
+    ) : GrammarContext(grammar) {
 
         /**
          * Compiles a [Expanding] process into an [OnWord] function and--if this [Expanding]
@@ -142,8 +144,7 @@ open class GrammarContext(
          */
         override fun expanding(name: Expanding.Name): OnWord {
             val f = locals[name]
-            return if (f == null) { super.expanding(name) }
-            else { input: Word -> f()(input) }
+            return if (f == null) { super.expanding(name) } else { input: Word -> f()(input) }
         }
 
         /**
@@ -155,4 +156,3 @@ open class GrammarContext(
         }
     }
 }
-

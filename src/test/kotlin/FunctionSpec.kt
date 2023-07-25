@@ -131,7 +131,7 @@ class FunctionSpec {
                     "process" then "Repeated"("process")
                 }
 
-                "Heart"() {
+                "Heart" {
                     "Repeated"("beat")
                 }
             }

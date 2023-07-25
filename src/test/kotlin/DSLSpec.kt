@@ -43,7 +43,7 @@ class DSLSpec {
         @Test
         fun `optionals are enclosed in braces`() {
             val process = fromBuilder { "a" then {"b"} } as Sequence
-            assertIs<Optional>(process.Tock)
+            assertIs<Decision>(process.Tock)
         }
 
         @Test
@@ -89,6 +89,22 @@ class DSLSpec {
     }
 
     @Nested
+    inner class Emptys {
+        @Test
+        fun `can be added with empty lambda`() {
+            val builder = GrammarBuilder.FunctionDefinitionBuilder(Fn.Name("WithEmptys"))
+            with(builder) {
+                "" then "b"
+            }
+            val process = builder.build()
+            assertIs<Fn.Definition>(process)
+            val sequence = process.process
+            assertIs<Sequence>(sequence)
+            assertIs<Process.Empty>(sequence.Tick)
+        }
+    }
+
+    @Nested
     inner class Optionals {
         @Test
         fun `can multi-enclose tail of complex subprocesses`() {
@@ -100,7 +116,7 @@ class DSLSpec {
             val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             assertIs<Expanding>(process.Tick)
-            assertIs<Optional>(process.Tock)
+            assertIs<Decision>(process.Tock)
         }
 
         @Test
@@ -113,7 +129,7 @@ class DSLSpec {
             val process = grammarBuilder.build().process
             assertIs<Parallel>(process)
             assertIs<Expanding>(process.Back)
-            assertIs<Optional>(process.Front)
+            assertIs<Decision>(process.Front)
         }
 
         @Test
@@ -125,7 +141,7 @@ class DSLSpec {
                     { "a" then "b" or "c" and "d" }
                 }
                 val process = grammarBuilder.build().process
-                assertIs<Optional>(process)
+                assertIs<Decision>(process)
             }
         }
     }
