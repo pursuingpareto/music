@@ -37,7 +37,7 @@ class FunctionSpec {
             assertIs<Sequence>(function)
             assertIs<Sequence>(caller)
             assertEquals("foo", (caller.Tick as Fn.Call).params.first().canonical())
-            assertEquals("bar", (caller.Tock as Note).canonical())
+            assertEquals("bar", (caller.Tock as Expanding).canonical())
         }
 
         @Test

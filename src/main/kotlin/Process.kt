@@ -22,7 +22,7 @@ typealias Parallel = Dimension.Space
  * ```
  *
  * In this grammar:
- * * the lowercase terms (one, two, etc...) represent [Note] processes
+ * * the lowercase terms (one, two, etc...) represent [Expanding] processes
  *
  * * the three unindented PascalCase words are the [Names][Fn.Name] of [Fn.Definition] processes,
  * which each have a corresponding `Process` defined below the name.
@@ -46,7 +46,7 @@ sealed interface Process {
     is Fn.Definition    -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
     is Optional         -> "[ ${process.canonical()} ]"
     is Fn.Call          -> "$name(${params.joinToString { it.canonical() }})"
-    is Note        -> obj.toString()
+    is Expanding        -> obj.toString()
   }
 }
 
@@ -56,10 +56,11 @@ sealed interface Process {
  *
  * @param obj A serial representation of this terminal "object".
  */
-data class Note(val obj: Name): Process {
+data class Expanding(val obj: Name): Process {
   constructor(name: String): this(Name(name))
 
   class Name(name: String): ProcessName(name) {
+
     init {
       require(!name.isPascalCase())
       require(name.isNotEmpty())
@@ -73,6 +74,7 @@ sealed interface Fn: Process {
   val name: Name
 
   class Name(name: String): ProcessName(name) {
+
     init { require(name.isPascalCase()) }
   }
 
@@ -81,10 +83,7 @@ sealed interface Fn: Process {
    *
    * @param name the [Fn.Name] of the corresponding [Definition] process.
    */
-  data class Call(
-    override val name: Name,
-    val params: List<Param> = listOf()
-  ): Fn
+  data class Call(override val name: Name, val params: Params = listOf()): Fn
 
 
   /**
@@ -99,7 +98,11 @@ sealed interface Fn: Process {
     val process: Process,
     val requiredArgs: List<RequiredArg> = listOf()
   ): Fn {
-    init { require(process !is Optional && process !is Note) } }
+
+    init {
+      require(process !is Optional && process !is Expanding)
+    }
+  }
 }
 
 
@@ -122,8 +125,8 @@ data class Optional(val process: Process): Process {
  */
 @Suppress("unused", "PropertyName")
 sealed class Dimension(
-  private val a: Process,
-  private val b: Process
+  private val left: Process,
+  private val right: Process
 ): Process {
 
   infix fun Process.then(that: Process) = Time(this, that)
@@ -160,7 +163,11 @@ sealed class Dimension(
     val Will: Process,
     val Wont: Process
   ): Dimension(Will, Wont) {
-      init { require(Will !is Optional && Wont !is Optional) } }
+
+      init {
+        require(Will !is Optional && Wont !is Optional)
+      }
+  }
 
 
   /**
@@ -178,5 +185,9 @@ sealed class Dimension(
     val Front: Process,
     val Back: Process
   ): Dimension(Front, Back) {
-    init { require(Front !is Optional || Back !is Optional) } }
+
+    init {
+      require(Front !is Optional || Back !is Optional)
+    }
+  }
 }

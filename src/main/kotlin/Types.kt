@@ -7,9 +7,7 @@ typealias RequiredArg = String
 
 typealias Param = Process
 
-typealias Expander = Note.Name.(String) -> Any?
-
-typealias MutableNamespace = MutableMap<Fn.Name, OnWord>
+typealias Params = List<Param>
 
 typealias Namespace = Map<Fn.Name, OnWord>
 
@@ -18,7 +16,8 @@ object Keyword {
 }
 
 /**
- * A name for a process.
+ * A name for a process. A [Fn.Name] is PascalCase and used for [Fn]'s.
+ * An [Expanding.Name] is used for terminal [Expanding] processes.
  */
 sealed class ProcessName(private val name: String) {
     override fun toString() = name

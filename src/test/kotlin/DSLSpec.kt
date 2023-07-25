@@ -8,15 +8,15 @@ import kotlin.test.assertIs
 
 class DSLSpec {
 
-    private fun fromBuilder(block: ScoreBuilder.FunctionDefinitionBuilder.() -> Unit): Process {
+    private fun fromBuilder(block: GrammarBuilder.FunctionDefinitionBuilder.() -> Unit): Process {
         val builder = builder()
         builder.apply(block)
         return builder.build().process
     }
 
-    private fun builder(): ScoreBuilder.FunctionDefinitionBuilder {
+    private fun builder(): GrammarBuilder.FunctionDefinitionBuilder {
         val name = Fn.Name("SomeName")
-        return ScoreBuilder.FunctionDefinitionBuilder(name)
+        return GrammarBuilder.FunctionDefinitionBuilder(name)
     }
 
     @Nested
@@ -49,8 +49,8 @@ class DSLSpec {
         @Test
         fun `terminals are non-PascalCase strings`() {
             val process = fromBuilder { "process_a" then "process_b" } as Sequence
-            assertIs<Note>(process.Tick)
-            assertIs<Note>(process.Tock)
+            assertIs<Expanding>(process.Tick)
+            assertIs<Expanding>(process.Tock)
         }
 
         @Test
@@ -93,26 +93,26 @@ class DSLSpec {
         @Test
         fun `can multi-enclose tail of complex subprocesses`() {
             val name = Fn.Name("Complex")
-            val scoreBuilder = ScoreBuilder.FunctionDefinitionBuilder(name)
-            with(scoreBuilder) {
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 "a" then { "b" or "c" and "d" }
             }
-            val process = scoreBuilder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
-            assertIs<Note>(process.Tick)
+            assertIs<Expanding>(process.Tick)
             assertIs<Optional>(process.Tock)
         }
 
         @Test
         fun `can multi-enclose head of complex subprocesses`() {
             val name = Fn.Name("Complex")
-            val scoreBuilder = ScoreBuilder.FunctionDefinitionBuilder(name)
-            with(scoreBuilder) {
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 { "a" then "b" or "c" } and "d"
             }
-            val process = scoreBuilder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Parallel>(process)
-            assertIs<Note>(process.Back)
+            assertIs<Expanding>(process.Back)
             assertIs<Optional>(process.Front)
         }
 
@@ -120,11 +120,11 @@ class DSLSpec {
         fun `cannot be top-level child of defined process`() {
             assertThrows<DSLParseException> {
                 val name = Fn.Name("Complex")
-                val scoreBuilder = ScoreBuilder.FunctionDefinitionBuilder(name)
-                with(scoreBuilder) {
+                val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+                with(grammarBuilder) {
                     { "a" then "b" or "c" and "d" }
                 }
-                val process = scoreBuilder.build().process
+                val process = grammarBuilder.build().process
                 assertIs<Optional>(process)
             }
         }
@@ -135,82 +135,82 @@ class DSLSpec {
         @Test
         fun `is left-heavy by default`() {
             val name = Fn.Name("MultiSequence")
-            val scoreBuilder = ScoreBuilder.FunctionDefinitionBuilder(name)
-            with(scoreBuilder) {
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 "a" then "b" then "c" then "d"
             }
-            val process = scoreBuilder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             val tick = process.Tick
             val tock = process.Tock
             assertIs<Sequence>(tick)
-            assertIs<Note>(tock)
+            assertIs<Expanding>(tock)
             assertEquals("d", tock.obj.toString())
 
             val ticktick = tick.Tick
             val ticktock = tick.Tock
             assertIs<Sequence>(ticktick)
-            assertIs<Note>(ticktock)
+            assertIs<Expanding>(ticktock)
             assertEquals("c", ticktock.obj.toString())
 
             val tickticktick = ticktick.Tick
             val tickticktock = ticktick.Tock
-            assertIs<Note>(tickticktick)
-            assertIs<Note>(tickticktock)
+            assertIs<Expanding>(tickticktick)
+            assertIs<Expanding>(tickticktock)
         }
 
         @Test
         fun `is still left-heavy with appropriate parentheses`() {
             val name = Fn.Name("MultiSequence")
-            val scoreBuilder = ScoreBuilder.FunctionDefinitionBuilder(name)
-            with(scoreBuilder) {
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 ( ( "a" then "b" ) then "c") then "d"
             }
-            val process = scoreBuilder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             val tick = process.Tick
             val tock = process.Tock
             assertIs<Sequence>(tick)
-            assertIs<Note>(tock)
+            assertIs<Expanding>(tock)
             assertEquals("d", tock.obj.toString())
 
             val ticktick = tick.Tick
             val ticktock = tick.Tock
             assertIs<Sequence>(ticktick)
-            assertIs<Note>(ticktock)
+            assertIs<Expanding>(ticktock)
             assertEquals("c", ticktock.obj.toString())
 
             val tickticktick = ticktick.Tick
             val tickticktock = ticktick.Tock
-            assertIs<Note>(tickticktick)
-            assertIs<Note>(tickticktock)
+            assertIs<Expanding>(tickticktick)
+            assertIs<Expanding>(tickticktock)
         }
 
         @Test
         fun `is right-heavy with appropriate parentheses`() {
             val name = Fn.Name("MultiSequence")
-            val scoreBuilder = ScoreBuilder.FunctionDefinitionBuilder(name)
-            with(scoreBuilder) {
+            val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
+            with(grammarBuilder) {
                 "a" then ("b"  then ("c" then "d"))
             }
-            val process = scoreBuilder.build().process
+            val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
             val tick = process.Tick
             val tock = process.Tock
-            assertIs<Note>(tick)
+            assertIs<Expanding>(tick)
             assertIs<Sequence>(tock)
             assertEquals("a", tick.obj.toString())
 
             val tocktick = tock.Tick
             val tocktock = tock.Tock
             assertIs<Sequence>(tocktock)
-            assertIs<Note>(tocktick)
+            assertIs<Expanding>(tocktick)
             assertEquals("b", tocktick.obj.toString())
 
             val tocktocktick = tocktock.Tick
             val tocktocktock = tocktock.Tock
-            assertIs<Note>(tocktocktick)
-            assertIs<Note>(tocktocktock)
+            assertIs<Expanding>(tocktocktick)
+            assertIs<Expanding>(tocktocktock)
         }
     }
 }

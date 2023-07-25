@@ -5,15 +5,31 @@ typealias OnWord = (Word) -> Any?
 typealias Deferred<T> = () -> T
 
 typealias Globals = Map<Fn.Name, Deferred<OnWord>>
-typealias Locals = Map<Note.Name, Deferred<OnWord>>
-typealias ArgMap = Map<Fn.Name, List<Note.Name>>
 
+typealias Locals = Map<Expanding.Name, Deferred<OnWord>>
+
+typealias ArgMap = Map<Fn.Name, List<Expanding.Name>>
+
+/**
+ * The goal of compilation is to turn a "dumb" [Process] into a function that we can actually call.
+ *
+ * The signature of these compiled functions is called [OnWord].
+ *
+ * A [Process] can be compiled to an [OnWord] function in a bare [Context] if it requires no
+ * "extra" information to run.
+ */
 interface Context {
 
-    fun expanding(name: Note.Name): OnWord {
+    /**
+     * Compiles an [Expanding] process into an [OnWord] function.
+     */
+    fun expanding(name: Expanding.Name): OnWord {
         return { input -> ("$name" == input) || throw NoMatchForInput("$input/$name") }
     }
 
+    /**
+     * Compiles an [Optional] process into an [OnWord] function.
+     */
     fun optional(process: OnWord): OnWord = { word ->
         try {
             process(word)
@@ -22,6 +38,9 @@ interface Context {
         }
     }
 
+    /**
+     * Compiles a [Decision] process into an [OnWord] function.
+     */
     fun decision(a: OnWord, b: OnWord): OnWord = { word: Word ->
         val attempts = listOf(a, b).map {
             try {
@@ -35,6 +54,9 @@ interface Context {
         if (attempts.first() == false) attempts.last() else attempts.first()
     }
 
+    /**
+     * Compiles a [Sequence] process into an [OnWord] function.
+     */
     @Suppress("UNCHECKED_CAST")
     fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
         when (val xw = x(word)) {
@@ -45,26 +67,36 @@ interface Context {
     }
 }
 
+/**
+ * [Process]es compiled in a [GrammarContext] may rely on the whole [Grammar],
+ * since the grammar provides a [functionNamespace] which allows us to resolve
+ * [Fn.Call] processes.
+ */
 open class GrammarContext(
     protected val grammar: Grammar
 ): Context {
 
-    private val functionArgs: ArgMap = grammar.definitions.map { it.name to it.requiredArgs.map { Note.Name(it) } }.toMap()
+    private val functionArgs: ArgMap =
+        grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Expanding.Name(arg) } }
 
-    val functionNamespace: Globals = grammar.definitions.map { it.name to { it.process.compile() } }.toMap()
+    val functionNamespace: Globals =
+        grammar.definitions.associate { it.name to { it.process.compile() } }
 
     private fun Process.compile(): OnWord = when(this) {
-        is Note -> expanding(obj)
+        is Expanding -> expanding(obj)
         is Optional -> optional(process.compile())
         is Dimension.Choice -> decision(Will.compile(), Wont.compile())
         is Dimension.Space -> throw NotImplementedError("Parallel processes not yet supported")
         is Dimension.Time -> sequence(Tick.compile(), Tock.compile())
-        is Fn.Call -> reference(name, name.materializeWith(this))
+        is Fn.Call -> call(name, name.materializeWith(this))
         is Fn.Definition -> throw Error("Definitions are not directly compiled")
     }
 
-    private fun reference(name: Fn.Name, replacements: Locals): OnWord {
-        return FunctionContext(name, replacements).reference()
+    /**
+     * Compiles a [Fn.Call] process into an [OnWord] function.
+     */
+    private fun call(name: Fn.Name, replacements: Locals): OnWord {
+        return FunctionContext(name, replacements).call()
     }
 
     private fun Fn.Name.materializeWith(call: Fn.Call): Locals {
@@ -72,23 +104,55 @@ open class GrammarContext(
             ?: throw UnrunnableProcess("could not materialize args for ${call.name}")
     }
 
+    /**
+     * [Process]es compiled in a [FunctionContext] may also rely on a collections of [locals] which
+     * are used to replace [Expanding] processes where appropriate. Consider the following example:
+     *
+     * ```kotlin
+     * val RepeatTwice = "RepeatTwice"
+     * val x = "x"
+     *
+     * ...
+     *
+     * RepeatTwice(x) {
+     *   x > x
+     * }
+     *
+     * CoinFlip {
+     *   heads | tails
+     * }
+     *
+     * FlipTwice {
+     *   RepeatTwice(CoinFlip)
+     * }
+     * ```
+     *
+     * In order to actually evaluate `RepeatTwice(CoinFlip)`, we need:
+     *   1. a [GrammarContext] to map the [Fn.Name]s "CoinFlip" and "RepeatTwice" to their [Fn.Definition].
+     *   2. a [FunctionContext] while referencing "RepeatTwice" so we can "remember" that we passed "CoinFlip" as a replacement for "x"
+     */
     inner class FunctionContext(
-        val name: Fn.Name,
-        val locals: Locals,
+        private val name: Fn.Name,
+        private val locals: Locals,
     ): GrammarContext(grammar) {
 
-        override fun expanding(name: Note.Name): OnWord {
+        /**
+         * Compiles a [Expanding] process into an [OnWord] function and--if this [Expanding]
+         * is a param in a function--makes the appropriate replacement.
+         */
+        override fun expanding(name: Expanding.Name): OnWord {
             val f = locals[name]
             return if (f == null) { super.expanding(name) }
             else { input: Word -> f()(input) }
         }
 
-        fun reference(): OnWord {
-            val f = functionNamespace[name]
-            if (f == null) throw UnrunnableProcess()
+        /**
+         * Compiles the [Fn.Call] process associated with THIS context to an [OnWord] function.
+         */
+        fun call(): OnWord {
+            val f = functionNamespace[name] ?: throw UnrunnableProcess()
             return { input -> f()(input) }
         }
-
     }
 }
 

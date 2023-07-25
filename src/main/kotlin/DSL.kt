@@ -1,12 +1,10 @@
 package org.example.pg
 
-fun Grammar.Companion.compose(block: ScoreBuilder.() -> Unit) = ScoreBuilder().apply(block).build()
+fun Grammar.Companion.compose(block: GrammarBuilder.() -> Unit) = GrammarBuilder().apply(block).build()
 
-infix fun Grammar.extend(block: ScoreBuilder.() -> Unit) = this.extend(ScoreBuilder().apply(block).build())
+infix fun Grammar.extend(block: GrammarBuilder.() -> Unit) = this.extend(GrammarBuilder().apply(block).build())
 
-interface Builder<T> {
-  fun build(): T
-}
+interface Builder<T> { fun build(): T }
 
 /**
  * Converts the DSL representation of a [Grammar] to an actual Grammar.
@@ -23,7 +21,7 @@ interface Builder<T> {
  * }
  * ```
  */
-class ScoreBuilder: Builder<Grammar> {
+class GrammarBuilder: Builder<Grammar> {
   private var name: Fn.Name? = null
   private val components = mutableListOf<Fn.Definition>()
   private var definedBuilder: FunctionDefinitionBuilder? = null
@@ -105,9 +103,7 @@ class ScoreBuilder: Builder<Grammar> {
       Dimension.Space(this.asProcess(), that.asProcess())
     }
 
-    private fun <T: Process> assignToProcess(block: () -> T): T {
-      return block().also { process = it }
-    }
+    private fun <T: Process> assignToProcess(block: () -> T): T = block().also { process = it }
 
     /**
      * Coerces receiver of [Any] type to [Process]. Fails unless receiver is
@@ -118,12 +114,12 @@ class ScoreBuilder: Builder<Grammar> {
      *
      * When receiver is a String, first try to coerce it to a [Fn.Call].
      * If this fails (which will happen if the string is not PascalCase), then
-     * coerce to an [Note] process.
+     * coerce to an [Expanding] process.
      */
     private fun Any.asProcess(): Process = when(this) {
       is Function0<*> -> asProcess()
       is String       -> asProcess()
-      is Process -> this
+      is Process      -> this
       else            -> throw DSLParseException("could not convert $this to Process")
     }
 
@@ -136,7 +132,7 @@ class ScoreBuilder: Builder<Grammar> {
     private fun String.asProcess() = try {
       Fn.Call(Fn.Name(this)) }
     catch (_: IllegalArgumentException) {
-      Note(this)
+      Expanding(this)
     }
   }
 }
