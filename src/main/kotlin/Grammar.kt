@@ -37,7 +37,7 @@ class Grammar(val definitions: List<Fn.Definition>) {
         .groupingBy { it }
         .eachCount()
         .filter { (_, count) -> count > 1 }
-        .map { (name, count) -> message(name, count)}
+        .map { (name, count) -> message(name, count) }
       if (errors.isNotEmpty()) {
         throw GrammarValidationException("Defined process names must be unique: ${errors.joinToString(separator = ", ")}")
       }

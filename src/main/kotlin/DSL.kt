@@ -109,7 +109,7 @@ class GrammarBuilder : Builder<Grammar> {
          * Coerces receiver of [Any] type to [Process]. Fails unless receiver is
          * [String], [Process], or a 0-arity function.
          *
-         * When the receiver is a zero-arity function, call it and return an [Optional] with
+         * When the receiver is a zero-arity function, call it and return an [Process.Optional] with
          * child `process` equal to the coerced return value.
          *
          * When receiver is a String, first try to coerce it to a [Fn.Call].

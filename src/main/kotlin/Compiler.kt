@@ -28,32 +28,42 @@ interface Context {
     /**
      * Compiles an [Expanding] process into an [OnWord] function.
      */
-    fun expanding(name: Expanding.Name): OnWord {
-        return { input -> ("$name" == input) || throw NoMatchForInput("$input/$name") }
+    fun expanding(name: Expanding.Name): OnWord = { input ->
+            if ("$name" == input) {
+                true
+            } else {
+                throw NoMatchForInput("$input/$name")
+            }
     }
 
     /**
      * Compiles a [Decision] process into an [OnWord] function.
      */
-    fun decision(a: OnWord, b: OnWord): OnWord = { word: Word ->
-        val attempts = listOf(a, b).map {
+    fun decision(a: OnWord, b: OnWord): OnWord = { input: Word ->
+        // apply the functions for each branch to the input, mapping exceptions to `false`
+        val attempts = listOf(a, b).map { f ->
             try {
-                it(word)
+                f(input)
             } catch (e: ProcessException) {
                 false
             }
         }
-        if (attempts.all { it == false }) throw NoMatchForInput(word)
+
+        // Every branch failed to match the input
+        if (attempts.all { it == false }) throw NoMatchForInput(input)
+
+        // No branch failed to match the input
         if (attempts.none { it == false }) {
-            if (attempts.first() == null && attempts.last() == true) {
-                attempts.last()
-            } else if (attempts.last() == null && attempts.first() == true) {
-                attempts.first()
+            if (attempts.any { it == true } && attempts.any { it == null }) {
+                true
             } else {
                 throw AmbiguousBranching()
             }
+        } else if (attempts.first() == false) {
+            attempts.last()
+        } else {
+            attempts.first()
         }
-        if (attempts.first() == false) attempts.last() else attempts.first()
     }
 
     /**

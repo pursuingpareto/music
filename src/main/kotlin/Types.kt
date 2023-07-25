@@ -1,6 +1,5 @@
 package org.example.pg
 
-
 typealias Word = String
 
 typealias RequiredArg = String

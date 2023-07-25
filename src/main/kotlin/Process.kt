@@ -52,6 +52,7 @@ sealed interface Process {
     object Empty : Process
 
     companion object {
+        @Suppress("FunctionName")
         fun Optional(process: Process) = Decision(process, Empty)
     }
 }

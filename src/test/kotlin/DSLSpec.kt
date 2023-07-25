@@ -1,5 +1,4 @@
 import org.example.pg.*
-import org.example.pg.Sequence
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -42,7 +41,7 @@ class DSLSpec {
 
         @Test
         fun `optionals are enclosed in braces`() {
-            val process = fromBuilder { "a" then {"b"} } as Sequence
+            val process = fromBuilder { "a" then { "b" } } as Sequence
             assertIs<Decision>(process.Tock)
         }
 
@@ -180,7 +179,7 @@ class DSLSpec {
             val name = Fn.Name("MultiSequence")
             val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
             with(grammarBuilder) {
-                ( ( "a" then "b" ) then "c") then "d"
+                (("a" then "b") then "c") then "d"
             }
             val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
@@ -207,7 +206,7 @@ class DSLSpec {
             val name = Fn.Name("MultiSequence")
             val grammarBuilder = GrammarBuilder.FunctionDefinitionBuilder(name)
             with(grammarBuilder) {
-                "a" then ("b"  then ("c" then "d"))
+                "a" then ("b" then ("c" then "d"))
             }
             val process = grammarBuilder.build().process
             assertIs<Sequence>(process)
