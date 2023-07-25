@@ -11,25 +11,25 @@ class GrammarSpec {
     inner class Terminals {
         @Test
         fun `cannot be created with PascalCase object`() {
-            assertThrows<RuntimeException> { Expanding("PascalCase") }
+            assertThrows<RuntimeException> { Note("PascalCase") }
         }
 
         @Test
         fun `can be created with non-PascalCase object`() {
-            Expanding("nonPascalCase")
-            Expanding("snake_case")
+            Note("nonPascalCase")
+            Note("snake_case")
         }
 
         @Test
         fun `can be created with single character object`() {
-            Expanding("a")
-            Expanding("z")
+            Note("a")
+            Note("z")
         }
 
         @Test
         fun `cannot be created with empty string object`() {
             assertThrows<RuntimeException> {
-                Expanding("") }
+                Note("") }
         }
     }
 
@@ -38,7 +38,7 @@ class GrammarSpec {
         @Test
         fun `can be created with terminal subprocess`() {
             Optional(
-                Expanding("a"))
+                Note("a"))
         }
 
         @Test
@@ -46,11 +46,11 @@ class GrammarSpec {
             Optional(
                 Sequence(
                     Sequence(
-                        Expanding("a"),
-                        Expanding("b")),
+                        Note("a"),
+                        Note("b")),
                     Sequence(
-                        Expanding("c"),
-                        Expanding("d"))
+                        Note("c"),
+                        Note("d"))
             ))
         }
 
@@ -59,13 +59,13 @@ class GrammarSpec {
             assertThrows<RuntimeException> {
                 Optional(
                     Optional(
-                        Expanding("a"))) }
+                        Note("a"))) }
         }
 
         @Test
         fun `cannot be child of defined process`() {
             val name = Fn.Name("SomeProcess")
-            val a = Expanding("a")
+            val a = Note("a")
             assertThrows<RuntimeException> { Fn.Definition(name, Optional(a)) }
         }
     }
@@ -73,7 +73,7 @@ class GrammarSpec {
     @Nested
     inner class DefinedProcessesAndReferences {
 
-        private val ab = Sequence(Expanding("a"), Expanding("b"))
+        private val ab = Sequence(Note("a"), Note("b"))
         @Test
         fun `can compare names`() {
             val call = Fn.Call(Fn.Name("A"))
@@ -92,7 +92,7 @@ class GrammarSpec {
 
         @Test
         fun `defined processes cannot contain single expanding process`() {
-            assertThrows<RuntimeException> { Fn.Definition(Fn.Name("A"), Expanding("foo")) }
+            assertThrows<RuntimeException> { Fn.Definition(Fn.Name("A"), Note("foo")) }
         }
     }
 
@@ -103,10 +103,10 @@ class GrammarSpec {
             Sequence(
                 Decision(
                     Parallel(
-                        Expanding("a"),
-                        Expanding("b")),
-                    Expanding("c")),
-                Expanding("d"))
+                        Note("a"),
+                        Note("b")),
+                    Note("c")),
+                Note("d"))
         }
 
         @Nested
@@ -115,19 +115,19 @@ class GrammarSpec {
             fun `can have optional steps`() {
                 Sequence(
                     Optional(
-                        Expanding("a")),
-                    Expanding("b"))
+                        Note("a")),
+                    Note("b"))
 
                 Sequence(
-                    Expanding("a"),
+                    Note("a"),
                     Optional(
-                        Expanding("b")))
+                        Note("b")))
 
                 Sequence(
                     Optional(
-                        Expanding("a")),
+                        Note("a")),
                     Optional(
-                        Expanding("b")))
+                        Note("b")))
             }
         }
 
@@ -138,14 +138,14 @@ class GrammarSpec {
                 assertThrows<RuntimeException> {
                     Decision(
                         Optional(
-                            Expanding("a")),
-                        Expanding("b")) }
+                            Note("a")),
+                        Note("b")) }
 
                 assertThrows<RuntimeException> {
                     Decision(
-                        Expanding("a"),
+                        Note("a"),
                         Optional(
-                            Expanding("b"))) }
+                            Note("b"))) }
             }
         }
 
@@ -156,27 +156,27 @@ class GrammarSpec {
                 assertThrows<RuntimeException> {
                     Parallel(
                         Optional(
-                            Expanding("a")),
+                            Note("a")),
                         Optional(
-                            Expanding("b"))) }
+                            Note("b"))) }
 
                 Parallel(
-                    Expanding("a"),
+                    Note("a"),
                     Optional(
-                        Expanding("b")))
+                        Note("b")))
 
                 Parallel(
                     Optional(
-                        Expanding("a")),
-                    Expanding("b"))
+                        Note("a")),
+                    Note("b"))
             }
         }
     }
 
     @Nested
     inner class Grammars {
-        private val ab = Sequence(Expanding("a"), Expanding("b"))
-        private val cd = Sequence(Expanding("c"), Expanding("d"))
+        private val ab = Sequence(Note("a"), Note("b"))
+        private val cd = Sequence(Note("c"), Note("d"))
 
         @Test
         fun `must contain one or more defined processes`() {
@@ -196,22 +196,22 @@ class GrammarSpec {
             val g1 = Grammar(listOf(Fn.Definition(Fn.Name("Foo"), ab)))
             val g2 = Grammar(listOf(Fn.Definition(Fn.Name("Bar"), cd)))
             val g3 = g1 extend g2
-            assertEquals(2, g3.processes.count())
+            assertEquals(2, g3.definitions.count())
         }
 
         @Test
         fun `have a kotlin-agnostic string representation`() = todo {
-            assertEquals("abc", Expanding("abc").canonical())
-            assertEquals("[ a ]", Optional(Expanding("a")).canonical())
-            assertEquals("a > b", Sequence(Expanding("a"), Expanding("b")).canonical())
-            assertEquals("a | b", Decision(Expanding("a"), Expanding("b")).canonical())
-            assertEquals("a & b", Parallel(Expanding("a"), Expanding("b")).canonical())
+            assertEquals("abc", Note("abc").canonical())
+            assertEquals("[ a ]", Optional(Note("a")).canonical())
+            assertEquals("a > b", Sequence(Note("a"), Note("b")).canonical())
+            assertEquals("a | b", Decision(Note("a"), Note("b")).canonical())
+            assertEquals("a & b", Parallel(Note("a"), Note("b")).canonical())
 
             val p1 = Fn.Definition(
                 Fn.Name("Process1"),
                 Dimension.Time(
-                    Expanding("a"),
-                    Expanding("b")))
+                    Note("a"),
+                    Note("b")))
             assertEquals("""
               Process1
                 : a > b

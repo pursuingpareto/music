@@ -1,75 +1,94 @@
 package org.example.pg
 
-object Expanders {
-    val equality: Expander = {
-        ("$this" == it) || throw NoMatchForInput(it)}
-}
+typealias OnWord = (Word) -> Any?
 
-typealias NS = Map<ProcessName, OnWord>
+typealias Deferred<T> = () -> T
 
-/**
- * Compiles a [Grammar] into a runnable [Program].
- *
- * Compilation produces a [Program] by converting each [Fn.Definition] process into a
- * single function of type [OnWord].
- *
- * Each of these functions can be called by passing it a word
- */
-@Suppress("UNCHECKED_CAST")
-class Compiler(private val expander: Expander = Expanders.equality)  {
+typealias Globals = Map<Fn.Name, Deferred<OnWord>>
+typealias Locals = Map<Note.Name, Deferred<OnWord>>
+typealias ArgMap = Map<Fn.Name, List<Note.Name>>
 
-    private val namespace: MutableNamespace = mutableMapOf()
+interface Context {
 
-    fun compile(grammar: Grammar) {
-        val context = GrammarContext(grammar)
+    fun expanding(name: Note.Name): OnWord {
+        return { input -> ("$name" == input) || throw NoMatchForInput("$input/$name") }
     }
 
-//    fun compile(grammar: Grammar): Program {
-//        namespace.clear()
-//        with()
-//        grammar.processes.forEach {namespace[it.name] = compile(it.process) }
-//        return Program(namespace)
-//    }
+    fun optional(process: OnWord): OnWord = { word ->
+        try {
+            process(word)
+        } catch (e: UnrunnableProcess) {
+            null
+        }
+    }
 
-//    private fun expanding(obj: Expanding.Name): OnWord = {
-//        word -> expander(obj, word) }
-//
-//    private fun optional(process: OnWord): OnWord = {
-//        word -> try { process(word) }
-//                catch (e: UnrunnableProcess) { null } }
-//
-//    private fun decision(a: OnWord, b: OnWord) = { word: Word ->
-//        val attempts = listOf(a, b).map {
-//            try { it(word) }
-//            catch (e: ProcessException) { false } }
-//        if (attempts.all  { it == false }) throw NoMatchForInput(word)
-//        if (attempts.none { it == false }) throw AmbiguousBranching()
-//        if (attempts.first() == false) attempts.last() else attempts.first() }
-//
-//    private fun reference(name: Fn.Name, params: List<Param>) = { word: Word ->
-//        this.namespace[name]?.invoke(word) ?: throw NoMatchForInput(word) }
-//
-//    private fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
-//        when (val xw = x(word)) {
-//            null -> y(word)
-//            true -> { w: Word -> y(w) }
-//            else -> sequence(xw as OnWord, y) } }
-//
-//    private fun named(
-//        onWord: OnWord,
-//        name: Fn.Name
-//    ): OnWord {
-//        this.namespace[name] = onWord
-//        return { word: Word -> onWord(word) } }
+    fun decision(a: OnWord, b: OnWord): OnWord = { word: Word ->
+        val attempts = listOf(a, b).map {
+            try {
+                it(word)
+            } catch (e: ProcessException) {
+                false
+            }
+        }
+        if (attempts.all { it == false }) throw NoMatchForInput(word)
+        if (attempts.none { it == false }) throw AmbiguousBranching()
+        if (attempts.first() == false) attempts.last() else attempts.first()
+    }
 
-//    private fun Process.functionalize(
-//        params: Map<Expanding.Name, Param> = mapOf()
-//    ): OnWord = when (this) {
-//        is Dimension.Time   -> sequence(tick.functionalize(params), tock.functionalize(params))
-//        is Dimension.Choice -> decision(will.functionalize(params), wont.functionalize(params))
-//        is Optional         -> optional(process.functionalize(params))
-//        is Expanding        -> params[obj]?.functionalize(params) ?: expanding(obj)
-//        is Fn.Definition    -> named(process.functionalize(params), name)
-//        is Fn.Call          -> reference(name, this.params)
-//        else                -> throw UnrunnableProcess("not supported ${this}!") }
+    @Suppress("UNCHECKED_CAST")
+    fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
+        when (val xw = x(word)) {
+            null -> y(word)
+            true -> { w: Word -> y(w) }
+            else -> sequence(xw as OnWord, y)
+        }
+    }
 }
+
+open class GrammarContext(
+    protected val grammar: Grammar
+): Context {
+
+    private val functionArgs: ArgMap = grammar.definitions.map { it.name to it.requiredArgs.map { Note.Name(it) } }.toMap()
+
+    val functionNamespace: Globals = grammar.definitions.map { it.name to { it.process.compile() } }.toMap()
+
+    private fun Process.compile(): OnWord = when(this) {
+        is Note -> expanding(obj)
+        is Optional -> optional(process.compile())
+        is Dimension.Choice -> decision(Will.compile(), Wont.compile())
+        is Dimension.Space -> throw NotImplementedError("Parallel processes not yet supported")
+        is Dimension.Time -> sequence(Tick.compile(), Tock.compile())
+        is Fn.Call -> reference(name, name.materializeWith(this))
+        is Fn.Definition -> throw Error("Definitions are not directly compiled")
+    }
+
+    private fun reference(name: Fn.Name, replacements: Locals): OnWord {
+        return FunctionContext(name, replacements).reference()
+    }
+
+    private fun Fn.Name.materializeWith(call: Fn.Call): Locals {
+        return functionArgs[this]?.zip(call.params.map { { it.compile() } })?.toMap()
+            ?: throw UnrunnableProcess("could not materialize args for ${call.name}")
+    }
+
+    inner class FunctionContext(
+        val name: Fn.Name,
+        val locals: Locals,
+    ): GrammarContext(grammar) {
+
+        override fun expanding(name: Note.Name): OnWord {
+            val f = locals[name]
+            return if (f == null) { super.expanding(name) }
+            else { input: Word -> f()(input) }
+        }
+
+        fun reference(): OnWord {
+            val f = functionNamespace[name]
+            if (f == null) throw UnrunnableProcess()
+            return { input -> f()(input) }
+        }
+
+    }
+}
+

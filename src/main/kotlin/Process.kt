@@ -22,7 +22,7 @@ typealias Parallel = Dimension.Space
  * ```
  *
  * In this grammar:
- * * the lowercase terms (one, two, etc...) represent [Expanding] processes
+ * * the lowercase terms (one, two, etc...) represent [Note] processes
  *
  * * the three unindented PascalCase words are the [Names][Fn.Name] of [Fn.Definition] processes,
  * which each have a corresponding `Process` defined below the name.
@@ -40,13 +40,13 @@ sealed interface Process {
    * Produces a canonical, language-agnostic string representation of this process.
    */
   fun canonical(): String = when(this) {
-    is Dimension.Choice -> "${will.canonical()} | ${wont.canonical()}"
-    is Dimension.Space  -> "${back.canonical()} & ${fore.canonical()}"
-    is Dimension.Time   -> "${tick.canonical()} > ${tock.canonical()}"
+    is Dimension.Choice -> "${Will.canonical()} | ${Wont.canonical()}"
+    is Dimension.Space  -> "${Front.canonical()} & ${Back.canonical()}"
+    is Dimension.Time   -> "${Tick.canonical()} > ${Tock.canonical()}"
     is Fn.Definition    -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
     is Optional         -> "[ ${process.canonical()} ]"
     is Fn.Call          -> "$name(${params.joinToString { it.canonical() }})"
-    is Expanding        -> obj.toString()
+    is Note        -> obj.toString()
   }
 }
 
@@ -56,7 +56,7 @@ sealed interface Process {
  *
  * @param obj A serial representation of this terminal "object".
  */
-data class Expanding(val obj: Name): Process {
+data class Note(val obj: Name): Process {
   constructor(name: String): this(Name(name))
 
   class Name(name: String): ProcessName(name) {
@@ -99,7 +99,7 @@ sealed interface Fn: Process {
     val process: Process,
     val requiredArgs: List<RequiredArg> = listOf()
   ): Fn {
-    init { require(process !is Optional && process !is Expanding) } }
+    init { require(process !is Optional && process !is Note) } }
 }
 
 
@@ -123,11 +123,14 @@ data class Optional(val process: Process): Process {
 @Suppress("unused", "PropertyName")
 sealed class Dimension(
   private val a: Process,
-  private val b: Process): Process {
+  private val b: Process
+): Process {
 
   infix fun Process.then(that: Process) = Time(this, that)
-  infix fun Process.or  (that: Process) = Choice(this, that)
+
   infix fun Process.and (that: Process) = Space(this, that)
+
+  infix fun Process.or  (that: Process) = Choice(this, that)
 
 
   /**
@@ -136,12 +139,13 @@ sealed class Dimension(
    * A sequence of two processes which occur one after the other without gaps.
    * The runtime of a `Time` is equal to the runtime of its components.
    *
-   * @param tick the first subprocess
-   * @param tock the second subprocess
+   * @param Tick the first subprocess
+   * @param Tock the second subprocess
    */
   data class Time(
-    val tick: Process,
-    val tock: Process): Dimension(tick, tock)
+    val Tick: Process,
+    val Tock: Process
+  ): Dimension(Tick, Tock)
 
 
   /**
@@ -149,13 +153,14 @@ sealed class Dimension(
    *
    * A fork in the road for process evaluation. There are two choices:
    *
-   * @param will the first choice
-   * @param wont the second choice
+   * @param Will the first choice
+   * @param Wont the second choice
    */
   data class Choice(
-    val will: Process,
-    val wont: Process): Dimension(will, wont) {
-      init { require(will !is Optional && wont !is Optional) } }
+    val Will: Process,
+    val Wont: Process
+  ): Dimension(Will, Wont) {
+      init { require(Will !is Optional && Wont !is Optional) } }
 
 
   /**
@@ -166,11 +171,12 @@ sealed class Dimension(
    * No guarantees about which subprocess starts or ends first. Think of
    * these processes like a solar eclipse: the overlap can be complete or partial.
    *
-   * @param back the "first" of two concurrent subprocesses
-   * @param fore the "second" of two concurrent subprocesses
+   * @param Front the "first" of two concurrent subprocesses
+   * @param Back the "second" of two concurrent subprocesses
    */
   data class Space(
-    val back: Process,
-    val fore: Process): Dimension(back, fore) {
-    init { require(back !is Optional || fore !is Optional) } }
+    val Front: Process,
+    val Back: Process
+  ): Dimension(Front, Back) {
+    init { require(Front !is Optional || Back !is Optional) } }
 }

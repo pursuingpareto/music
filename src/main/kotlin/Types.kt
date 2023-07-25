@@ -7,7 +7,7 @@ typealias RequiredArg = String
 
 typealias Param = Process
 
-typealias Expander = Expanding.Name.(String) -> Any?
+typealias Expander = Note.Name.(String) -> Any?
 
 typealias MutableNamespace = MutableMap<Fn.Name, OnWord>
 

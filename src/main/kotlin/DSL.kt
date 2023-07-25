@@ -1,8 +1,8 @@
 package org.example.pg
 
-fun Grammar.Companion.fromDsl(block: GrammarBuilder.() -> Unit) = GrammarBuilder().apply(block).build()
+fun Grammar.Companion.compose(block: ScoreBuilder.() -> Unit) = ScoreBuilder().apply(block).build()
 
-infix fun Grammar.extend(block: GrammarBuilder.() -> Unit) = this.extend(GrammarBuilder().apply(block).build())
+infix fun Grammar.extend(block: ScoreBuilder.() -> Unit) = this.extend(ScoreBuilder().apply(block).build())
 
 interface Builder<T> {
   fun build(): T
@@ -23,7 +23,7 @@ interface Builder<T> {
  * }
  * ```
  */
-class GrammarBuilder: Builder<Grammar> {
+class ScoreBuilder: Builder<Grammar> {
   private var name: Fn.Name? = null
   private val components = mutableListOf<Fn.Definition>()
   private var definedBuilder: FunctionDefinitionBuilder? = null
@@ -58,10 +58,11 @@ class GrammarBuilder: Builder<Grammar> {
     /**
      * Converts `"Foo"("a")` to a [Fn.Call] with single param `Expanding("a")`
      */
-    operator fun String.invoke(vararg maybeParams: Any): Fn.Call {
+    operator fun String.invoke(vararg maybeParams: Any): Fn.Call = assignToProcess {
       val params = maybeParams.map { it.asProcess() }
-      return Fn.Call(Fn.Name(this), params)
+      Fn.Call(Fn.Name(this), params)
     }
+
 
     override fun build(): Fn.Definition = process?.let {
       Fn.Definition(name, it, args)
@@ -104,7 +105,7 @@ class GrammarBuilder: Builder<Grammar> {
       Dimension.Space(this.asProcess(), that.asProcess())
     }
 
-    private fun assignToProcess(block: () -> Process): Process {
+    private fun <T: Process> assignToProcess(block: () -> T): T {
       return block().also { process = it }
     }
 
@@ -117,12 +118,12 @@ class GrammarBuilder: Builder<Grammar> {
      *
      * When receiver is a String, first try to coerce it to a [Fn.Call].
      * If this fails (which will happen if the string is not PascalCase), then
-     * coerce to an [Expanding] process.
+     * coerce to an [Note] process.
      */
     private fun Any.asProcess(): Process = when(this) {
       is Function0<*> -> asProcess()
       is String       -> asProcess()
-      is Process      -> this
+      is Process -> this
       else            -> throw DSLParseException("could not convert $this to Process")
     }
 
@@ -135,7 +136,7 @@ class GrammarBuilder: Builder<Grammar> {
     private fun String.asProcess() = try {
       Fn.Call(Fn.Name(this)) }
     catch (_: IllegalArgumentException) {
-      Expanding(this)
+      Note(this)
     }
   }
 }

@@ -1,44 +1,35 @@
-import Grammars.RPSGrammar
-import Grammars.RockPaperScissors
-import Grammars.celebrate
-import Grammars.paper
-import Grammars.rock
-import Grammars.scissors
-import Grammars.shoot
-import Grammars.win
 import org.example.pg.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
 
 class ProgramSpec {
 
-    private val optionalAThenB = Grammar.fromDsl {
+    private val optionalAThenB = Grammar.compose {
         "OptionalAThenB" {
             { "a" } then "b"
         }
     }
 
-    private val aThenOptionalB = Grammar.fromDsl {
+    private val aThenOptionalB = Grammar.compose {
         "AThenOptionalB" {
             "a" then { "b" }
         }
     }
 
-    private val optionalMiddle = Grammar.fromDsl {
+    private val optionalMiddle = Grammar.compose {
         "OptionalMiddle" {
             "a" then { "b" } then "c"
         }
     }
 
-    private val ab = Grammar.fromDsl {
+    private val ab = Grammar.compose {
         "AB" {
             "a" then "b"
         }
     }
 
-    private val abc = Grammar.fromDsl {
+    private val abc = Grammar.compose {
         "ABC" {
             "a" then "b" then "c"
         }
@@ -49,7 +40,7 @@ class ProgramSpec {
 
         @Test
         fun `programs can invoke and transition and end`() {
-            val grammar = Grammar.fromDsl {
+            val grammar = Grammar.compose {
                 "Program" {
                     "invokening" then "transition" then "finish"
                 }
@@ -163,7 +154,7 @@ class ProgramSpec {
 
             @Test
             fun `sequences with two optionals are not allowed`() {
-                val grammar = Grammar.fromDsl {
+                val grammar = Grammar.compose {
                     "DoubleOptional" {
                         { "a" } then { "b" }
                     }
@@ -212,7 +203,7 @@ class ProgramSpec {
 
         @Test
         fun `branches are committed to when they match user input`() {
-            val grammar = Grammar.fromDsl {
+            val grammar = Grammar.compose {
                 "Branching" {
                     ("a" then "b") or
                     ("c" then "d")
@@ -240,7 +231,7 @@ class ProgramSpec {
 
         @Test
         fun `branches fail on invalid input`() {
-            val grammar = Grammar.fromDsl {
+            val grammar = Grammar.compose {
                 "Branching" {
                     ("a" then "b") or
                     ("c" then "d")
@@ -255,7 +246,7 @@ class ProgramSpec {
         @Test
         fun `must not be ambiguous`() {
             // Note that BOTH branches start with "a", which makes this ambiguous.
-            val grammar = Grammar.fromDsl {
+            val grammar = Grammar.compose {
                 "AmbiguousBranch" {
                     ("a" then "b") or
                     ("a" then "c")
@@ -275,13 +266,13 @@ class ProgramSpec {
             @Test
             fun `branches may not be optional`() {
                 assertThrows<RuntimeException> {
-                    Program.from(Grammar.fromDsl {
+                    Program.from(Grammar.compose {
                         "OptionalBranch" {
                             { "a" } or "b"
                         }})}
 
                 assertThrows<RuntimeException> {
-                    Program.from(Grammar.fromDsl {
+                    Program.from(Grammar.compose {
                         "OptionalBranch" {
                             "a" or { "b" }
                         }})}
@@ -289,7 +280,7 @@ class ProgramSpec {
 
             @Test
             fun `sequence branches with optionals fail at runtime when ambiguous`() {
-                val grammar = Grammar.fromDsl {
+                val grammar = Grammar.compose {
                     "Branching" {
                         ({"a"} then "b") or ("b" then "c")
                     }}
@@ -304,24 +295,4 @@ class ProgramSpec {
             }
         }
     }
-
-//    @Test
-//    fun `the compiler can be modified to add additional functionality`() {
-//        val timings = mutableListOf<Pair<ProcessName, Double>>()
-//        var start = System.nanoTime()
-//        Program
-//            .from(RPSGrammar) { word ->
-//                val now = System.nanoTime()
-//                val dur = now - start
-//                start = now
-//                timings.add(Pair(this, dur / 1000.0))
-//                if ("$this" != word) throw NoMatchForInput("Invalid!") else true
-//            }
-//            .invoke(RockPaperScissors)
-//            .invoke(rock).also { Thread.sleep(42) }
-//            .invoke(paper).also { Thread.sleep(33) }
-//            .invoke(scissors)(shoot)(rock)(win)(celebrate)
-//
-//        assertEquals(11, timings.count())
-//    }
 }

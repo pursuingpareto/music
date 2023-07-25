@@ -3,19 +3,19 @@ package org.example.pg
 /**
  * A collection of [Fn.Definition] processes which together define a language of possible programs.
  */
-class Grammar(val processes: List<Fn.Definition>) {
+class Grammar(val definitions: List<Fn.Definition>) {
 
-  init { validateGrammar(processes) }
+  init { validateGrammar(definitions) }
 
   /**
    * Creates a new grammar from two existing grammars.
    */
-  infix fun extend(other: Grammar) = Grammar(this.processes + other.processes)
+  infix fun extend(other: Grammar) = Grammar(this.definitions + other.definitions)
 
   /**
    * Produces a canonical, language-agnostic string representation of this grammar.
    */
-  fun canonical() = processes.joinToString(separator = "\n\n") { it.canonical() }
+  fun canonical() = definitions.joinToString(separator = "\n\n") { it.canonical() }
 
   override fun toString() = canonical()
 
@@ -24,13 +24,7 @@ class Grammar(val processes: List<Fn.Definition>) {
     fun validateGrammar(components: List<Fn.Definition>) {
       validateAtLeastOneComponent(components)
       validateUniqueNames(components)
-//      validateSufficientParams()
-
     }
-
-//    private fun validateSufficientParams() {
-//      TODO("Not yet implemented")
-//    }
 
     private fun validateAtLeastOneComponent(components: List<Fn.Definition>) {
       if (components.isEmpty()) throw GrammarValidationException("cannot create grammar with zero processes")

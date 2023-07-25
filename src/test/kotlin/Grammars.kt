@@ -1,5 +1,5 @@
 import org.example.pg.Grammar
-import org.example.pg.fromDsl
+import org.example.pg.compose
 
 object Grammars {
     const val RockPaperScissors = "RockPaperScissors"
@@ -21,7 +21,7 @@ object Grammars {
     val tie       = "tie"
 
     // Full rock paper scissors grammar WITH builder
-    val RPSGrammar = Grammar.fromDsl {
+    val RPSGrammar = Grammar.compose {
         RockPaperScissors {
             Countdown then Reveal then ResolveOutcome
         }
