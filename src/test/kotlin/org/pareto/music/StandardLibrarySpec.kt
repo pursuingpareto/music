@@ -1,12 +1,12 @@
 @file:Suppress("PropertyName", "MemberVisibilityCanBePrivate")
 
-package org.pareto.processGrammar
+package org.pareto.music
 
-import org.pareto.processGrammar.Keyword.END
-import org.pareto.processGrammar.Lib.OneOrMore
-import org.pareto.processGrammar.Lib.Possible
-import org.pareto.processGrammar.Lib.Repeating
-import org.pareto.processGrammar.Lib.ZeroOrMore
+import org.pareto.music.Keyword.END
+import org.pareto.music.Lib.OneOrMore
+import org.pareto.music.Lib.Possible
+import org.pareto.music.Lib.Repeating
+import org.pareto.music.Lib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

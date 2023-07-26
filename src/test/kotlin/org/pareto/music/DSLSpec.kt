@@ -1,4 +1,4 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -8,10 +8,10 @@ import kotlin.test.assertIs
 
 class DSLSpec {
 
-    private fun fromBuilder(block: GrammarBuilder.FunctionDefinitionBuilder.() -> Unit): Process {
+    private fun fromBuilder(block: GrammarBuilder.FunctionDefinitionBuilder.() -> Unit): Music {
         val builder = builder()
         builder.apply(block)
-        return builder.build().process
+        return builder.build().music
     }
 
     private fun builder(): GrammarBuilder.FunctionDefinitionBuilder {
@@ -25,7 +25,7 @@ class DSLSpec {
         @Test
         fun `sequences are created with THEN`() {
             val process = fromBuilder { "a" then "b" }
-            assertIs<Sequence>(process)
+            assertIs<Melody>(process)
         }
 
         @Test
@@ -37,25 +37,25 @@ class DSLSpec {
         @Test
         fun `parallel are created with AND`() {
             val process = fromBuilder { "a" and "b" }
-            assertIs<Parallel>(process)
+            assertIs<Harmony>(process)
         }
 
         @Test
         fun `optionals are enclosed in braces`() {
-            val process = fromBuilder { "a" then { "b" } } as Sequence
+            val process = fromBuilder { "a" then { "b" } } as Melody
             assertIs<Decision>(process.Tock)
         }
 
         @Test
         fun `terminals are non-PascalCase strings`() {
-            val process = fromBuilder { "process_a" then "process_b" } as Sequence
-            assertIs<Expanding>(process.Tick)
-            assertIs<Expanding>(process.Tock)
+            val process = fromBuilder { "process_a" then "process_b" } as Melody
+            assertIs<Note>(process.Tick)
+            assertIs<Note>(process.Tock)
         }
 
         @Test
         fun `references are PascalCase strings`() {
-            val process = fromBuilder { "ProcessA" then "ProcessB" } as Sequence
+            val process = fromBuilder { "ProcessA" then "ProcessB" } as Melody
             assertIs<Fn.Call>(process.Tick)
             assertIs<Fn.Call>(process.Tock)
         }
@@ -98,9 +98,9 @@ class DSLSpec {
             }
             val process = builder.build()
             assertIs<Fn.Definition>(process)
-            val sequence = process.process
-            assertIs<Sequence>(sequence)
-            assertIs<Empty>(sequence.Tick)
+            val sequence = process.music
+            assertIs<Melody>(sequence)
+            assertIs<Silence>(sequence.Tick)
         }
     }
 
@@ -113,9 +113,9 @@ class DSLSpec {
             with(grammarBuilder) {
                 "a" then { "b" or "c" and "d" }
             }
-            val process = grammarBuilder.build().process
-            assertIs<Sequence>(process)
-            assertIs<Expanding>(process.Tick)
+            val process = grammarBuilder.build().music
+            assertIs<Melody>(process)
+            assertIs<Note>(process.Tick)
             assertIs<Decision>(process.Tock)
         }
 
@@ -126,9 +126,9 @@ class DSLSpec {
             with(grammarBuilder) {
                 { "a" then "b" or "c" } and "d"
             }
-            val process = grammarBuilder.build().process
-            assertIs<Parallel>(process)
-            assertIs<Expanding>(process.Back)
+            val process = grammarBuilder.build().music
+            assertIs<Harmony>(process)
+            assertIs<Note>(process.Back)
             assertIs<Decision>(process.Front)
         }
 
@@ -140,7 +140,7 @@ class DSLSpec {
                 with(grammarBuilder) {
                     { "a" then "b" or "c" and "d" }
                 }
-                val process = grammarBuilder.build().process
+                val process = grammarBuilder.build().music
                 assertIs<Decision>(process)
             }
         }
@@ -155,24 +155,24 @@ class DSLSpec {
             with(grammarBuilder) {
                 "a" then "b" then "c" then "d"
             }
-            val process = grammarBuilder.build().process
-            assertIs<Sequence>(process)
+            val process = grammarBuilder.build().music
+            assertIs<Melody>(process)
             val tick = process.Tick
             val tock = process.Tock
-            assertIs<Sequence>(tick)
-            assertIs<Expanding>(tock)
+            assertIs<Melody>(tick)
+            assertIs<Note>(tock)
             assertEquals("d", tock.obj.toString())
 
             val ticktick = tick.Tick
             val ticktock = tick.Tock
-            assertIs<Sequence>(ticktick)
-            assertIs<Expanding>(ticktock)
+            assertIs<Melody>(ticktick)
+            assertIs<Note>(ticktock)
             assertEquals("c", ticktock.obj.toString())
 
             val tickticktick = ticktick.Tick
             val tickticktock = ticktick.Tock
-            assertIs<Expanding>(tickticktick)
-            assertIs<Expanding>(tickticktock)
+            assertIs<Note>(tickticktick)
+            assertIs<Note>(tickticktock)
         }
 
         @Test
@@ -182,24 +182,24 @@ class DSLSpec {
             with(grammarBuilder) {
                 (("a" then "b") then "c") then "d"
             }
-            val process = grammarBuilder.build().process
-            assertIs<Sequence>(process)
+            val process = grammarBuilder.build().music
+            assertIs<Melody>(process)
             val tick = process.Tick
             val tock = process.Tock
-            assertIs<Sequence>(tick)
-            assertIs<Expanding>(tock)
+            assertIs<Melody>(tick)
+            assertIs<Note>(tock)
             assertEquals("d", tock.obj.toString())
 
             val ticktick = tick.Tick
             val ticktock = tick.Tock
-            assertIs<Sequence>(ticktick)
-            assertIs<Expanding>(ticktock)
+            assertIs<Melody>(ticktick)
+            assertIs<Note>(ticktock)
             assertEquals("c", ticktock.obj.toString())
 
             val tickticktick = ticktick.Tick
             val tickticktock = ticktick.Tock
-            assertIs<Expanding>(tickticktick)
-            assertIs<Expanding>(tickticktock)
+            assertIs<Note>(tickticktick)
+            assertIs<Note>(tickticktock)
         }
 
         @Test
@@ -209,24 +209,24 @@ class DSLSpec {
             with(grammarBuilder) {
                 "a" then ("b" then ("c" then "d"))
             }
-            val process = grammarBuilder.build().process
-            assertIs<Sequence>(process)
+            val process = grammarBuilder.build().music
+            assertIs<Melody>(process)
             val tick = process.Tick
             val tock = process.Tock
-            assertIs<Expanding>(tick)
-            assertIs<Sequence>(tock)
+            assertIs<Note>(tick)
+            assertIs<Melody>(tock)
             assertEquals("a", tick.obj.toString())
 
             val tocktick = tock.Tick
             val tocktock = tock.Tock
-            assertIs<Sequence>(tocktock)
-            assertIs<Expanding>(tocktick)
+            assertIs<Melody>(tocktock)
+            assertIs<Note>(tocktick)
             assertEquals("b", tocktick.obj.toString())
 
             val tocktocktick = tocktock.Tick
             val tocktocktock = tocktock.Tock
-            assertIs<Expanding>(tocktocktick)
-            assertIs<Expanding>(tocktocktock)
+            assertIs<Note>(tocktocktick)
+            assertIs<Note>(tocktocktock)
         }
     }
 }

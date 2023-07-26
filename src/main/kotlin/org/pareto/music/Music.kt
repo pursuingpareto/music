@@ -1,18 +1,16 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
-typealias Sequence = Dimension.Time
+typealias Melody   = Dimension.Time
 typealias Decision = Dimension.Choice
-typealias Parallel = Dimension.Space
+typealias Harmony  = Dimension.Space
 
-infix fun Process.then(that: Process) = Dimension.Time(this, that)
-
-infix fun Process.and(that: Process) = Dimension.Space(this, that)
-
-infix fun Process.or(that: Process) = Dimension.Choice(this, that)
+infix fun Music.then(that: Music) = Melody(this, that)
+infix fun Music.and (that: Music) = Harmony(this, that)
+infix fun Sound.or  (that: Music) = Decision(this, that)
 
 /**
  * A container for various process types.  Each subtype can be represented
- * in a "canonical" form by calling [Process.canonical].
+ * in a "canonical" form by calling [Music.canonical].
  *
  * Consider the following representation of a grammar describing dice rolls:
  *
@@ -28,7 +26,7 @@ infix fun Process.or(that: Process) = Dimension.Choice(this, that)
  * ```
  *
  * In this grammar:
- * * the lowercase terms (one, two, etc...) represent [Expanding] processes
+ * * the lowercase terms (one, two, etc...) represent [Note] processes
  *
  * * the three unindented PascalCase words are the [Names][Fn.Name] of [Fn.Definition] processes,
  * which each have a corresponding `Process` defined below the name.
@@ -41,22 +39,27 @@ infix fun Process.or(that: Process) = Dimension.Choice(this, that)
  * * The ` RollTwoDice ` process is meant to represent *simultaneous* throwing of two dice. We use a
  * [Dimension.Space] process (`RollDie & RollDie`) to represent these concurrent processes.
  */
-sealed interface Process
+sealed interface Music
 
 /**
- * The [Empty] process contains nothing, so it is always skipped at runtime.
+ * The [Silence] object contains nothing, so it is always skipped at runtime.
  *
  * This process can occasionally be useful! The standard library's [Possible][Lib.Possible]
  * process uses it!
  */
-object Empty : Process
+object Silence : Music
 
 /**
- * An expanding process is terminal, so it has no children.
+ * Every instance of [Music] that isn't [Silence] is [Sound]
+ */
+sealed interface Sound : Music
+
+/**
+ * A [Note] is terminal, so it has no children.
  *
  * @param obj A serial representation of this terminal "object".
  */
-data class Expanding(val obj: Name) : Process {
+data class Note(val obj: Name) : Sound {
     constructor(name: String) : this(Name(name))
 
     class Name(name: String) : ProcessName(name) {
@@ -68,7 +71,7 @@ data class Expanding(val obj: Name) : Process {
     }
 }
 
-sealed interface Fn : Process {
+sealed interface Fn : Sound {
 
     val name: Name
 
@@ -89,16 +92,16 @@ sealed interface Fn : Process {
      * must be unique within a [Grammar].
      *
      * @param name the name of this process.
-     * @param process the corresponding process.
+     * @param music the corresponding process.
      */
     data class Definition(
         override val name: Name,
-        val process: Process,
+        val music: Music,
         val requiredArgs: List<RequiredArg> = listOf(),
     ) : Fn {
 
         init {
-            require(process !is Empty && process !is Expanding)
+            require(music !is Silence && music !is Note)
         }
     }
 }
@@ -114,9 +117,9 @@ sealed interface Fn : Process {
  */
 @Suppress("unused", "PropertyName")
 sealed class Dimension(
-    private val left: Process,
-    private val right: Process,
-) : Process {
+    private val left: Music,
+    private val right: Music,
+) : Sound {
 
     /**
      * ## `a > b`
@@ -128,8 +131,8 @@ sealed class Dimension(
      * @param Tock the second subprocess
      */
     data class Time(
-        val Tick: Process,
-        val Tock: Process,
+        val Tick: Music,
+        val Tock: Music,
     ) : Dimension(Tick, Tock)
 
     /**
@@ -141,14 +144,9 @@ sealed class Dimension(
      * @param Wont the second choice
      */
     data class Choice(
-        val Will: Process,
-        val Wont: Process,
-    ) : Dimension(Will, Wont) {
-
-        init {
-            require(Will !is Empty)
-        }
-    }
+        val Will: Sound,
+        val Wont: Music,
+    ) : Dimension(Will, Wont)
 
     /**
      * ## `a & b`
@@ -162,12 +160,12 @@ sealed class Dimension(
      * @param Back the "second" of two concurrent subprocesses
      */
     data class Space(
-        val Front: Process,
-        val Back: Process,
+        val Front: Music,
+        val Back: Music,
     ) : Dimension(Front, Back) {
 
         init {
-            require(Front !is Empty || Back !is Empty)
+            require(Front !is Silence || Back !is Silence)
         }
     }
 }
@@ -175,12 +173,12 @@ sealed class Dimension(
 /**
  * Produces a canonical, language-agnostic string representation of this process.
  */
-fun Process.canonical(): String = when (this) {
+fun Music.canonical(): String = when (this) {
     is Dimension.Choice -> "${Will.canonical()} | ${Wont.canonical()}"
-    is Dimension.Space -> "${Front.canonical()} & ${Back.canonical()}"
-    is Dimension.Time -> "${Tick.canonical()} > ${Tock.canonical()}"
-    is Fn.Definition -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
-    is Empty -> "[ ]"
-    is Fn.Call -> "$name(${params.joinToString { it.canonical() }})"
-    is Expanding -> obj.toString()
+    is Dimension.Space ->  "${Front.canonical()} & ${Back.canonical()}"
+    is Dimension.Time ->   "${Tick.canonical()} > ${Tock.canonical()}"
+    is Fn.Definition ->    "$name(${requiredArgs.joinToString()})\n  : ${music.canonical()}"
+    is Silence ->          "[ ]"
+    is Fn.Call ->          "$name(${params.joinToString { it.canonical() }})"
+    is Note ->             obj.toString()
 }

@@ -1,6 +1,6 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
-import org.pareto.processGrammar.Lib.Possible
+import org.pareto.music.Lib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -12,25 +12,25 @@ class GrammarSpec {
     inner class Terminals {
         @Test
         fun `cannot be created with PascalCase object`() {
-            assertThrows<RuntimeException> { Expanding("PascalCase") }
+            assertThrows<RuntimeException> { Note("PascalCase") }
         }
 
         @Test
         fun `can be created with non-PascalCase object`() {
-            Expanding("nonPascalCase")
-            Expanding("snake_case")
+            Note("nonPascalCase")
+            Note("snake_case")
         }
 
         @Test
         fun `can be created with single character object`() {
-            Expanding("a")
-            Expanding("z")
+            Note("a")
+            Note("z")
         }
 
         @Test
         fun `cannot be created with empty string object`() {
             assertThrows<RuntimeException> {
-                Expanding("")
+                Note("")
             }
         }
     }
@@ -40,46 +40,37 @@ class GrammarSpec {
         @Test
         fun `can be created with terminal subprocess`() {
             Possible(
-                Expanding("a"),
+                Note("a"),
             )
         }
 
         @Test
         fun `can be created with complex subprocess`() {
             Possible(
-                Sequence(
-                    Sequence(
-                        Expanding("a"),
-                        Expanding("b"),
+                Melody(
+                    Melody(
+                        Note("a"),
+                        Note("b"),
                     ),
-                    Sequence(
-                        Expanding("c"),
-                        Expanding("d"),
+                    Melody(
+                        Note("c"),
+                        Note("d"),
                     ),
                 ),
             )
         }
 
         @Test
-        fun `cannot contain empty`() {
-            assertThrows<RuntimeException> {
-                Possible(
-                    Empty,
-                )
-            }
-        }
-
-        @Test
         fun `cannot be child of defined process`() {
             val name = Fn.Name("SomeProcess")
-            assertThrows<RuntimeException> { Fn.Definition(name, Empty) }
+            assertThrows<RuntimeException> { Fn.Definition(name, Silence) }
         }
     }
 
     @Nested
     inner class DefinedProcessesAndReferences {
 
-        private val ab = Sequence(Expanding("a"), Expanding("b"))
+        private val ab = Melody(Note("a"), Note("b"))
 
         @Test
         fun `can compare names`() {
@@ -92,14 +83,14 @@ class GrammarSpec {
         fun `can access names via Maps`() {
             val call = Fn.Call(Fn.Name("A"))
             val definition = Fn.Definition(Fn.Name("A"), ab)
-            val map = mapOf(definition.name to definition.process)
+            val map = mapOf(definition.name to definition.music)
             val process = map[call.name]
-            assertEquals(process, definition.process)
+            assertEquals(process, definition.music)
         }
 
         @Test
         fun `defined processes cannot contain single expanding process`() {
-            assertThrows<RuntimeException> { Fn.Definition(Fn.Name("A"), Expanding("foo")) }
+            assertThrows<RuntimeException> { Fn.Definition(Fn.Name("A"), Note("foo")) }
         }
     }
 
@@ -107,15 +98,15 @@ class GrammarSpec {
     inner class BinaryProcesses {
         @Test
         fun `can contain other binary processes`() {
-            Sequence(
+            Melody(
                 Decision(
-                    Parallel(
-                        Expanding("a"),
-                        Expanding("b"),
+                    Harmony(
+                        Note("a"),
+                        Note("b"),
                     ),
-                    Expanding("c"),
+                    Note("c"),
                 ),
-                Expanding("d"),
+                Note("d"),
             )
         }
 
@@ -123,26 +114,26 @@ class GrammarSpec {
         inner class Sequences {
             @Test
             fun `can have optional steps`() {
-                Sequence(
+                Melody(
                     Possible(
-                        Expanding("a"),
+                        Note("a"),
                     ),
-                    Expanding("b"),
+                    Note("b"),
                 )
 
-                Sequence(
-                    Expanding("a"),
+                Melody(
+                    Note("a"),
                     Possible(
-                        Expanding("b"),
+                        Note("b"),
                     ),
                 )
 
-                Sequence(
+                Melody(
                     Possible(
-                        Expanding("a"),
+                        Note("a"),
                     ),
                     Possible(
-                        Expanding("b"),
+                        Note("b"),
                     ),
                 )
             }
@@ -153,20 +144,20 @@ class GrammarSpec {
             @Test
             fun `cannot have two empty layers`() {
                 assertThrows<RuntimeException> {
-                    Parallel(
-                        Empty,
-                        Empty
+                    Harmony(
+                        Silence,
+                        Silence
                     )
                 }
 
-                Parallel(
-                    Expanding("a"),
-                    Empty,
+                Harmony(
+                    Note("a"),
+                    Silence,
                 )
 
-                Parallel(
-                    Empty,
-                    Expanding("b"),
+                Harmony(
+                    Silence,
+                    Note("b"),
                 )
             }
         }
@@ -174,8 +165,8 @@ class GrammarSpec {
 
     @Nested
     inner class Grammars {
-        private val ab = Sequence(Expanding("a"), Expanding("b"))
-        private val cd = Sequence(Expanding("c"), Expanding("d"))
+        private val ab = Melody(Note("a"), Note("b"))
+        private val cd = Melody(Note("c"), Note("d"))
 
         @Test
         fun `must contain one or more defined processes`() {
@@ -200,17 +191,17 @@ class GrammarSpec {
 
         @Test
         fun `have a kotlin-agnostic string representation`() = todo {
-            assertEquals("abc", Expanding("abc").canonical())
-            assertEquals("[ a ]", Possible(Expanding("a")).canonical())
-            assertEquals("a > b", Sequence(Expanding("a"), Expanding("b")).canonical())
-            assertEquals("a | b", Decision(Expanding("a"), Expanding("b")).canonical())
-            assertEquals("a & b", Parallel(Expanding("a"), Expanding("b")).canonical())
+            assertEquals("abc", Note("abc").canonical())
+            assertEquals("[ a ]", Possible(Note("a")).canonical())
+            assertEquals("a > b", Melody(Note("a"), Note("b")).canonical())
+            assertEquals("a | b", Decision(Note("a"), Note("b")).canonical())
+            assertEquals("a & b", Harmony(Note("a"), Note("b")).canonical())
 
             val p1 = Fn.Definition(
                 Fn.Name("Process1"),
                 Dimension.Time(
-                    Expanding("a"),
-                    Expanding("b"),
+                    Note("a"),
+                    Note("b"),
                 ),
             )
             assertEquals(

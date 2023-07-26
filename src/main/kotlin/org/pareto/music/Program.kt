@@ -1,11 +1,11 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 /**
  * A [Program] is compiled from a [Grammar] with a [Context].
  *
  * Once compiled, a program can be run by passing it strings. The first word you pass it
  * will be a PascalCase word that matches the [Fn.Name] of one of the functions in the grammar.
- * Subsequent words will be non-PascalCase strings which correspond to the [Expanding.Name]'s in
+ * Subsequent words will be non-PascalCase strings which correspond to the [Note.Name]'s in
  * your grammar.
  *
  * When words can be unambiguously assigned.

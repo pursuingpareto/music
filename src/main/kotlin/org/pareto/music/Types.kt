@@ -1,10 +1,10 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 typealias Word = String
 
 typealias RequiredArg = String
 
-typealias Param = Process
+typealias Param = Music
 
 typealias Params = List<Param>
 
@@ -16,7 +16,7 @@ object Keyword {
 
 /**
  * A name for a process. A [Fn.Name] is PascalCase and used for [Fn]'s.
- * An [Expanding.Name] is used for terminal [Expanding] processes.
+ * An [Note.Name] is used for terminal [Note] processes.
  */
 sealed class ProcessName(private val name: String) {
     override fun toString() = name

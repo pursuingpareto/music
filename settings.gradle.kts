@@ -5,5 +5,5 @@ pluginManagement {
     }
     
 }
-rootProject.name = "processGrammar"
+rootProject.name = "music"
 

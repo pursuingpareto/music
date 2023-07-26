@@ -1,4 +1,4 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 /**
  * A collection of [Fn.Definition] processes which together define a language of possible programs.

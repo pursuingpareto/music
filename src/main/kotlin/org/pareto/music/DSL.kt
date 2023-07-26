@@ -1,6 +1,6 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
-import org.pareto.processGrammar.Lib.Possible
+import org.pareto.music.Lib.Possible
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
     return if (includeStdLib) { Lib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
@@ -57,17 +57,17 @@ class GrammarBuilder : Builder<Grammar> {
         args: Array<out RequiredArg>? = null,
     ) : Builder<Fn.Definition> {
         private val args = args?.toList() ?: listOf()
-        private var process: Process? = null
+        private var music: Music? = null
 
         /**
          * Converts `"Foo"("a")` to a [Fn.Call] with single param `Expanding("a")`
          */
         operator fun String.invoke(vararg maybeParams: Any): Fn.Call = assignToProcess {
-            val params = maybeParams.map { it.asProcess() }
+            val params = maybeParams.map { it.asMusic() }
             Fn.Call(Fn.Name(this), params)
         }
 
-        override fun build(): Fn.Definition = process?.let {
+        override fun build(): Fn.Definition = music?.let {
             Fn.Definition(name, it, args)
         } ?: throw DSLParseException("can't build null process")
 
@@ -80,7 +80,7 @@ class GrammarBuilder : Builder<Grammar> {
          * ```
          */
         infix fun Any.then(that: Any) = assignToProcess {
-            Dimension.Time(this.asProcess(), that.asProcess())
+            Dimension.Time(this.asMusic(), that.asMusic())
         }
 
         /**
@@ -92,7 +92,7 @@ class GrammarBuilder : Builder<Grammar> {
          * ```
          */
         infix fun Any.or(that: Any) = assignToProcess {
-            Dimension.Choice(this.asProcess(), that.asProcess())
+            Dimension.Choice(this.asSound(), that.asMusic())
         }
 
         /**
@@ -104,40 +104,42 @@ class GrammarBuilder : Builder<Grammar> {
          * ```
          */
         infix fun Any.and(that: Any) = assignToProcess {
-            Dimension.Space(this.asProcess(), that.asProcess())
+            Dimension.Space(this.asMusic(), that.asMusic())
         }
 
-        private fun <T : Process> assignToProcess(block: () -> T): T = block().also { process = it }
+        private fun <T : Music> assignToProcess(block: () -> T): T = block().also { music = it }
 
         /**
-         * Coerces receiver of [Any] type to [Process]. Fails unless receiver is
-         * [String], [Process], or a 0-arity function.
+         * Coerces receiver of [Any] type to [Music]. Fails unless receiver is
+         * [String], [Music], or a 0-arity function.
          *
          * When the receiver is a zero-arity function, call it and return an [Possible] with
          * child `process` equal to the coerced return value.
          *
          * When receiver is a String, first try to coerce it to a [Fn.Call].
          * If this fails (which will happen if the string is not PascalCase), then
-         * coerce to an [Expanding] process.
+         * coerce to an [Note] process.
          */
-        private fun Any.asProcess(): Process = when (this) {
-            is Function0<*> -> asProcess()
-            is String -> asProcess()
-            is Process -> this
+        private fun Any.asMusic(): Music = when (this) {
+            is Function0<*> -> asSound()
+            is String -> asSound()
+            is Music -> this
             else -> throw DSLParseException("could not convert $this to Process")
         }
 
-        private fun Function0<*>.asProcess(): Process {
-            return invoke()?.asProcess()
+        private fun Any.asSound(): Sound = this.asMusic() as? Sound ?: throw DSLParseException("could not convert ${this.asMusic()} to Sound")
+
+        private fun Function0<*>.asSound(): Sound {
+            return invoke()?.asSound()
                 ?.let { Possible(it) }
                 ?: throw DSLParseException("can't convert function to process")
         }
 
-        private fun String.asProcess(): Process {
-            return if (isEmpty()) { Empty } else { try {
+        private fun String.asSound(): Music {
+            return if (isEmpty()) { Silence } else { try {
                 Fn.Call(Fn.Name(this))
             } catch (_: IllegalArgumentException) {
-                Expanding(this)
+                Note(this)
             }
             }
         }

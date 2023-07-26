@@ -1,6 +1,6 @@
 @file:Suppress("FunctionName", "MemberVisibilityCanBePrivate")
 
-package org.pareto.processGrammar
+package org.pareto.music
 
 object Lib {
 
@@ -67,19 +67,19 @@ object Lib {
             Fn.Definition(
                 Fn.Name(Possible),
                 Decision(
-                    Expanding(process),
-                    Empty
+                    Note(process),
+                    Silence
                 ),
                 listOf(process)
             ),
             Fn.Definition(
                 Fn.Name(Repeating),
-                Sequence(
-                    Expanding(process),
+                Melody(
+                    Note(process),
                     Fn.Call(
                         Fn.Name(Repeating),
                         listOf(
-                            Expanding(process)
+                            Note(process)
                         )
                     )
                 ),
@@ -87,15 +87,15 @@ object Lib {
             ),
             Fn.Definition(
                 Fn.Name(OneOrMore),
-                Sequence(
-                    Expanding(process),
+                Melody(
+                    Note(process),
                     Fn.Call(
                         Fn.Name(Possible),
                         listOf(
                             Fn.Call(
                                 Fn.Name(OneOrMore),
                                 listOf(
-                                    Expanding(process)
+                                    Note(process)
                                 )
                             )
                         )
@@ -111,7 +111,7 @@ object Lib {
                         Fn.Call(
                             Fn.Name(OneOrMore),
                             listOf(
-                                Expanding(process)
+                                Note(process)
                             )
                         )
                     )
@@ -124,25 +124,25 @@ object Lib {
     /**
      * A Possible process can be skipped or evaluated at runtime.
      */
-    fun Possible(process: Process): Process = process or EMPTY
+    fun Possible(sound: Sound): Sound = sound or EMPTY
 
     /**
      * A Repeating process repeats forever.
      */
-    fun Repeating(process: Process): Process = process then Repeating(process)
+    fun Repeating(music: Music): Music = music then Repeating(music)
 
     /**
      * A OneOrMore process happens 1 or more times.
      */
-    fun OneOrMore(process: Process): Process = process then Possible(OneOrMore(process))
+    fun OneOrMore(music: Music): Sound = music then Possible(OneOrMore(music))
 
     /**
      * A ZeroOrMore process happens 0 or more times.
      */
-    fun ZeroOrMore(process: Process): Process = Possible(OneOrMore(process))
+    fun ZeroOrMore(music: Music): Music = Possible(OneOrMore(music))
 
     /**
      * The Empty process. Always skipped at runtime.
      */
-    val EMPTY = Empty
+    val EMPTY = Silence
 }

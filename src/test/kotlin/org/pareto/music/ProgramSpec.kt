@@ -1,4 +1,4 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -276,7 +276,7 @@ class ProgramSpec {
 
             @Test
             fun `left branch may not be empty`() {
-                assertThrows<RuntimeException> {
+                assertThrows<DSLParseException> {
                     Program.from(
                         Grammar.compose {
                             "OptionalBranch" {
@@ -286,7 +286,7 @@ class ProgramSpec {
                     )
                 }
 
-                assertThrows<RuntimeException> {
+                assertThrows<DSLParseException> {
                     Program.from(
                         Grammar.compose {
                             "OptionalBranch" {

@@ -1,4 +1,4 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 open class ProcessException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
 

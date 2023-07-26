@@ -1,4 +1,4 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -33,12 +33,12 @@ class FunctionSpec {
                     "Function"("foo") then "bar"
                 }
             }
-            val function = grammar.definitions.first().process
-            val caller = grammar.definitions.last().process
-            assertIs<Sequence>(function)
-            assertIs<Sequence>(caller)
+            val function = grammar.definitions.first().music
+            val caller = grammar.definitions.last().music
+            assertIs<Melody>(function)
+            assertIs<Melody>(caller)
             assertEquals("foo", (caller.Tick as Fn.Call).params.first().canonical())
-            assertEquals("bar", (caller.Tock as Expanding).canonical())
+            assertEquals("bar", (caller.Tock as Note).canonical())
         }
 
         @Test
@@ -159,7 +159,7 @@ class FunctionSpec {
                     "Function"("Function"("foo")) then "bar"
                 }
             }
-            val body = grammar.definitions.last().process as Sequence
+            val body = grammar.definitions.last().music as Melody
             assertEquals("bar", body.Tock.canonical())
             val tick = body.Tick
             assertIs<Fn.Call>(tick)

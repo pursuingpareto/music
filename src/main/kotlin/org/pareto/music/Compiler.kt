@@ -1,4 +1,4 @@
-package org.pareto.processGrammar
+package org.pareto.music
 
 typealias OnWord = (Word) -> Any?
 
@@ -6,29 +6,29 @@ typealias Deferred<T> = () -> T
 
 typealias Globals = Map<Fn.Name, Deferred<OnWord>>
 
-typealias Locals = Map<Expanding.Name, Deferred<OnWord>>
+typealias Locals = Map<Note.Name, Deferred<OnWord>>
 
-typealias ArgMap = Map<Fn.Name, List<Expanding.Name>>
+typealias ArgMap = Map<Fn.Name, List<Note.Name>>
 
 /**
- * The goal of compilation is to turn a "dumb" [Process] into a function that we can actually call.
+ * The goal of compilation is to turn a "dumb" [Music] into a function that we can actually call.
  *
  * The signature of these compiled functions is called [OnWord].
  *
- * A [Process] can be compiled to an [OnWord] function in a bare [Context] if it requires no
+ * A [Music] can be compiled to an [OnWord] function in a bare [Context] if it requires no
  * "extra" information to run.
  */
 interface Context {
 
     /**
-     * Compiles a [Empty] process into an [OnWord] function.
+     * Compiles a [Silence] process into an [OnWord] function.
      */
     fun empty(): OnWord = { input -> if (input == Keyword.END) true else null }
 
     /**
-     * Compiles an [Expanding] process into an [OnWord] function.
+     * Compiles an [Note] process into an [OnWord] function.
      */
-    fun expanding(name: Expanding.Name): OnWord = { input ->
+    fun expanding(name: Note.Name): OnWord = { input ->
         if ("$name" == input) {
             true
         } else {
@@ -77,7 +77,7 @@ interface Context {
     }
 
     /**
-     * Compiles a [Sequence] process into an [OnWord] function.
+     * Compiles a [Melody] process into an [OnWord] function.
      */
     @Suppress("UNCHECKED_CAST")
     fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
@@ -90,7 +90,7 @@ interface Context {
 }
 
 /**
- * [Process]es compiled in a [GrammarContext] may rely on the whole [Grammar],
+ * [Music]es compiled in a [GrammarContext] may rely on the whole [Grammar],
  * since the grammar provides a [functionNamespace] which allows us to resolve
  * [Fn.Call] processes.
  */
@@ -99,14 +99,14 @@ open class GrammarContext(
 ) : Context {
 
     private val functionArgs: ArgMap =
-        grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Expanding.Name(arg) } }
+        grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Note.Name(arg) } }
 
     val functionNamespace: Globals =
-        grammar.definitions.associate { it.name to { it.process.compile() } }
+        grammar.definitions.associate { it.name to { it.music.compile() } }
 
-    private fun Process.compile(): OnWord = when (this) {
-        is Expanding -> expanding(obj)
-        is Empty -> empty()
+    private fun Music.compile(): OnWord = when (this) {
+        is Note -> expanding(obj)
+        is Silence -> empty()
         is Dimension.Choice -> decision(Will.compile(), Wont.compile())
         is Dimension.Space -> throw NotImplementedError("Parallel processes not yet supported")
         is Dimension.Time -> sequence(Tick.compile(), Tock.compile())
@@ -127,8 +127,8 @@ open class GrammarContext(
     }
 
     /**
-     * [Process]es compiled in a [FunctionContext] may also rely on a collections of [locals] which
-     * are used to replace [Expanding] processes where appropriate. Consider the following example:
+     * [Music]es compiled in a [FunctionContext] may also rely on a collections of [locals] which
+     * are used to replace [Note] processes where appropriate. Consider the following example:
      *
      * ```kotlin
      * val RepeatTwice = "RepeatTwice"
@@ -159,10 +159,10 @@ open class GrammarContext(
     ) : GrammarContext(grammar) {
 
         /**
-         * Compiles a [Expanding] process into an [OnWord] function and--if this [Expanding]
+         * Compiles a [Note] process into an [OnWord] function and--if this [Note]
          * is a param in a function--makes the appropriate replacement.
          */
-        override fun expanding(name: Expanding.Name): OnWord {
+        override fun expanding(name: Note.Name): OnWord {
             val f = locals[name]
             return if (f == null) { super.expanding(name) } else { input: Word -> f()(input) }
         }
