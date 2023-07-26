@@ -41,27 +41,15 @@ infix fun Process.or(that: Process) = Dimension.Choice(this, that)
  * * The ` RollTwoDice ` process is meant to represent *simultaneous* throwing of two dice. We use a
  * [Dimension.Space] process (`RollDie & RollDie`) to represent these concurrent processes.
  */
-sealed interface Process {
-    /**
-     * Produces a canonical, language-agnostic string representation of this process.
-     */
-    fun canonical(): String = when (this) {
-        is Dimension.Choice -> "${Will.canonical()} | ${Wont.canonical()}"
-        is Dimension.Space -> "${Front.canonical()} & ${Back.canonical()}"
-        is Dimension.Time -> "${Tick.canonical()} > ${Tock.canonical()}"
-        is Fn.Definition -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
-        is Empty -> "[ ]"
-        is Fn.Call -> "$name(${params.joinToString { it.canonical() }})"
-        is Expanding -> obj.toString()
-    }
+sealed interface Process
 
-    object Empty : Process
-
-    companion object {
-        @Suppress("FunctionName")
-        fun Optional(process: Process) = Decision(process, Empty)
-    }
-}
+/**
+ * The [Empty] process contains nothing, so it is always skipped at runtime.
+ *
+ * This process can occasionally be useful! The standard library's [Possible][org.example.pg.stdlib.Lib.Possible]
+ * process uses it!
+ */
+object Empty : Process
 
 /**
  * An expanding process is terminal, so it has no children.
@@ -110,7 +98,7 @@ sealed interface Fn : Process {
     ) : Fn {
 
         init {
-            require(process !is Process.Empty && process !is Expanding)
+            require(process !is Empty && process !is Expanding)
         }
     }
 }
@@ -158,7 +146,7 @@ sealed class Dimension(
     ) : Dimension(Will, Wont) {
 
         init {
-            require(Will !is Process.Empty)
+            require(Will !is Empty)
         }
     }
 
@@ -179,7 +167,20 @@ sealed class Dimension(
     ) : Dimension(Front, Back) {
 
         init {
-            require(Front !is Process.Empty || Back !is Process.Empty)
+            require(Front !is Empty || Back !is Empty)
         }
     }
+}
+
+/**
+ * Produces a canonical, language-agnostic string representation of this process.
+ */
+fun Process.canonical(): String = when (this) {
+    is Dimension.Choice -> "${Will.canonical()} | ${Wont.canonical()}"
+    is Dimension.Space -> "${Front.canonical()} & ${Back.canonical()}"
+    is Dimension.Time -> "${Tick.canonical()} > ${Tock.canonical()}"
+    is Fn.Definition -> "$name(${requiredArgs.joinToString()})\n  : ${process.canonical()}"
+    is Empty -> "[ ]"
+    is Fn.Call -> "$name(${params.joinToString { it.canonical() }})"
+    is Expanding -> obj.toString()
 }

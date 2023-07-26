@@ -1,5 +1,8 @@
+package com.example.pg
+
 import org.example.pg.* // ktlint-disable no-wildcard-imports
 import org.example.pg.Sequence
+import org.example.pg.stdlib.Lib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -38,14 +41,14 @@ class GrammarSpec {
     inner class Optionals {
         @Test
         fun `can be created with terminal subprocess`() {
-            Process.Optional(
+            Possible(
                 Expanding("a"),
             )
         }
 
         @Test
         fun `can be created with complex subprocess`() {
-            Process.Optional(
+            Possible(
                 Sequence(
                     Sequence(
                         Expanding("a"),
@@ -62,8 +65,8 @@ class GrammarSpec {
         @Test
         fun `cannot contain empty`() {
             assertThrows<RuntimeException> {
-                Process.Optional(
-                    Process.Empty,
+                Possible(
+                    Empty,
                 )
             }
         }
@@ -71,7 +74,7 @@ class GrammarSpec {
         @Test
         fun `cannot be child of defined process`() {
             val name = Fn.Name("SomeProcess")
-            assertThrows<RuntimeException> { Fn.Definition(name, Process.Empty) }
+            assertThrows<RuntimeException> { Fn.Definition(name, Empty) }
         }
     }
 
@@ -123,7 +126,7 @@ class GrammarSpec {
             @Test
             fun `can have optional steps`() {
                 Sequence(
-                    Process.Optional(
+                    Possible(
                         Expanding("a"),
                     ),
                     Expanding("b"),
@@ -131,16 +134,16 @@ class GrammarSpec {
 
                 Sequence(
                     Expanding("a"),
-                    Process.Optional(
+                    Possible(
                         Expanding("b"),
                     ),
                 )
 
                 Sequence(
-                    Process.Optional(
+                    Possible(
                         Expanding("a"),
                     ),
-                    Process.Optional(
+                    Possible(
                         Expanding("b"),
                     ),
                 )
@@ -153,18 +156,18 @@ class GrammarSpec {
             fun `cannot have two empty layers`() {
                 assertThrows<RuntimeException> {
                     Parallel(
-                        Process.Empty,
-                        Process.Empty
+                        Empty,
+                        Empty
                     )
                 }
 
                 Parallel(
                     Expanding("a"),
-                    Process.Empty,
+                    Empty,
                 )
 
                 Parallel(
-                    Process.Empty,
+                    Empty,
                     Expanding("b"),
                 )
             }
@@ -200,7 +203,7 @@ class GrammarSpec {
         @Test
         fun `have a kotlin-agnostic string representation`() = todo {
             assertEquals("abc", Expanding("abc").canonical())
-            assertEquals("[ a ]", Process.Optional(Expanding("a")).canonical())
+            assertEquals("[ a ]", Possible(Expanding("a")).canonical())
             assertEquals("a > b", Sequence(Expanding("a"), Expanding("b")).canonical())
             assertEquals("a | b", Decision(Expanding("a"), Expanding("b")).canonical())
             assertEquals("a & b", Parallel(Expanding("a"), Expanding("b")).canonical())

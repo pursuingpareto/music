@@ -1,4 +1,6 @@
-import org.example.pg.*
+package com.example.pg
+
+import org.example.pg.* // ktlint-disable no-wildcard-imports
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -305,7 +307,7 @@ class ProgramSpec {
             }
 
             @Test
-            fun `sequence branches with optionals fail at runtime when ambiguous`() {
+            fun `sequence branches with emptys fail at runtime when ambiguous`() {
                 val grammar = Grammar.compose {
                     "Branching" {
                         ({ "a" } then "b") or ("b" then "c")
@@ -324,6 +326,33 @@ class ProgramSpec {
 
                 assertThrows<AmbiguousBranching> { prog2("b") }
             }
+
+            @Test
+            fun `decisions with empty branch can be skipped`() {
+                val g = Grammar.compose {
+                    "F" {
+                        "a" then ("b" or "") then "c"
+                    }
+                }
+                Program.from(g)("F")("a")("b")("c")("END")
+                val prog = Program.from(g)("F")("a")
+                prog("c")
+                prog("END")
+            }
+        }
+    }
+
+    @Test
+    fun `empty program can be ended immediately`() {
+        val g = Grammar.compose {
+            "F" { "" then "" }
+        }
+        Program.from(g)("F")("END")
+        assertThrows<NoMatchForInput> {
+            Program.from(g)("F")("F")
+        }
+        assertThrows<NoMatchForInput> {
+            Program.from(g)("F")("")
         }
     }
 }

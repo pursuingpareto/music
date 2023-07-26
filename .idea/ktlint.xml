@@ -4,6 +4,7 @@
     <disabledRules>
       <list>
         <option value="wrapping" />
+        <option value="no-unused-imports" />
       </list>
     </disabledRules>
   </component>

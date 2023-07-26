@@ -1,3 +1,5 @@
+package com.example.pg
+
 import org.example.pg.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

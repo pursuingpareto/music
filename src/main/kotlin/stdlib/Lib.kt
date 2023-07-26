@@ -6,12 +6,29 @@ import org.example.pg.Sequence
 @Suppress("FunctionNames")
 object Lib {
 
+    /**
+     * @see [Possible]
+     */
     const val Possible = "Possible"
+
+    /**
+     * @see [Repeating]
+     */
     const val Repeating = "Repeating"
-    const val Repeatable = "Repeatable"
-    const val Reversed = "Reversed"
-    const val Inverted = "Inverted"
-    const val InsideOut = "InsideOut"
+
+    /**
+     * @see [OneOrMore]
+     */
+    const val OneOrMore = "OneOrMore"
+
+    /**
+     * @see [ZeroOrMore]
+     */
+    const val ZeroOrMore = "ZeroOrMore"
+
+    /**
+     * helper string to make your DSL grammars look nice <3
+     */
     const val process = "process"
 
     /**
@@ -32,20 +49,28 @@ object Lib {
      *     }
      *     ```
      *
-     * * [Repeatable]
+     * * [OneOrMore]
      *     ```
-     *     Repeating(process) {
-     *         process then Possible(Repeatable(process))
+     *     OneOrMore(process) {
+     *         process then Possible(OneOrMore(process))
+     *     }
+     *     ```
+     *
+     * * [ZeroOrMore]
+     *     ```
+     *     ZeroOrMore(process) {
+     *         Possible(OneOrMore(process))
      *     }
      *     ```
      */
     val StandardGrammar: Grammar = Grammar(
+        // this isn't pretty, but no need to depend on the DSL in this package.
         listOf(
             Fn.Definition(
                 Fn.Name(Possible),
-                Sequence(
+                Decision(
                     Expanding(process),
-                    Process.Empty
+                    Empty
                 ),
                 listOf(process)
             ),
@@ -63,17 +88,32 @@ object Lib {
                 listOf(process)
             ),
             Fn.Definition(
-                Fn.Name(Repeatable),
+                Fn.Name(OneOrMore),
                 Sequence(
                     Expanding(process),
                     Fn.Call(
                         Fn.Name(Possible),
                         listOf(
                             Fn.Call(
-                                Fn.Name(Repeatable),
+                                Fn.Name(OneOrMore),
                                 listOf(
                                     Expanding(process)
                                 )
+                            )
+                        )
+                    )
+                ),
+                listOf(process)
+            ),
+            Fn.Definition(
+                Fn.Name(ZeroOrMore),
+                Fn.Call(
+                    Fn.Name(Possible),
+                    listOf(
+                        Fn.Call(
+                            Fn.Name(OneOrMore),
+                            listOf(
+                                Expanding(process)
                             )
                         )
                     )
@@ -84,37 +124,27 @@ object Lib {
     )
 
     /**
-     * A [Possible] process can be skipped or evaluated at runtime.
+     * A Possible process can be skipped or evaluated at runtime.
      */
     fun Possible(process: Process): Process = process or EMPTY
 
     /**
-     * A [Repeating] process repeats forever.
+     * A Repeating process repeats forever.
      */
     fun Repeating(process: Process): Process = process then Repeating(process)
 
     /**
-     * A [Repeatable] process happens 1 or more times.
+     * A OneOrMore process happens 1 or more times.
      */
-    fun Repeatable(process: Process): Process = process then Possible(Repeatable(process))
+    fun OneOrMore(process: Process): Process = process then Possible(OneOrMore(process))
 
     /**
-     * A [Reversed] Sequence goes tock-tick instead of tick-tock.
+     * A ZeroOrMore process happens 0 or more times.
      */
-    fun Reversed(time: Dimension.Time): Sequence = time.Tock then time.Tick
-
-    /**
-     * An [Inverted] Decision swaps options.
-     */
-    fun Inverted(choice: Dimension.Choice): Decision = choice.Wont or choice.Will
-
-    /**
-     * An [InsideOut] Parallel process exchanges front and back.
-     */
-    fun InsideOut(space: Dimension.Space): Parallel = space.Front and space.Back
+    fun ZeroOrMore(process: Process): Process = Possible(OneOrMore(process))
 
     /**
      * The Empty process. Always skipped at runtime.
      */
-    val EMPTY = Process.Empty
+    val EMPTY = Empty
 }

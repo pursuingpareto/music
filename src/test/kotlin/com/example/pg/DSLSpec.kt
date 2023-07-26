@@ -1,4 +1,6 @@
-import org.example.pg.*
+package com.example.pg
+
+import org.example.pg.* // ktlint-disable no-wildcard-imports
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -99,7 +101,7 @@ class DSLSpec {
             assertIs<Fn.Definition>(process)
             val sequence = process.process
             assertIs<Sequence>(sequence)
-            assertIs<Process.Empty>(sequence.Tick)
+            assertIs<Empty>(sequence.Tick)
         }
     }
 

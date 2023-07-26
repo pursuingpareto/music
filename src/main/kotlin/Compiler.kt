@@ -21,23 +21,25 @@ typealias ArgMap = Map<Fn.Name, List<Expanding.Name>>
 interface Context {
 
     /**
-     * Compiles a [Process.Empty] process into an [OnWord] function.
+     * Compiles a [Empty] process into an [OnWord] function.
      */
-    fun empty(): OnWord = { null }
+    fun empty(): OnWord = { input -> if (input == Keyword.END) true else null }
 
     /**
      * Compiles an [Expanding] process into an [OnWord] function.
      */
     fun expanding(name: Expanding.Name): OnWord = { input ->
-            if ("$name" == input) {
-                true
-            } else {
-                throw NoMatchForInput("$input/$name")
-            }
+        if ("$name" == input) {
+            true
+        } else {
+            throw NoMatchForInput("$input/$name")
+        }
     }
 
     /**
      * Compiles a [Decision] process into an [OnWord] function.
+     *
+     * TODO - cleanup messy nested branches!
      */
     fun decision(a: OnWord, b: OnWord): OnWord = { input: Word ->
         // apply the functions for each branch to the input, mapping exceptions to `false`
@@ -54,10 +56,18 @@ interface Context {
 
         // No branch failed to match the input
         if (attempts.none { it == false }) {
-            if (attempts.any { it == true } && attempts.any { it == null }) {
-                true
+            if (attempts.any { it == null }) {
+                if (attempts.any { it == true }) {
+                    true
+                } else {
+                    if (attempts.any { it is Function1<*, *> }) {
+                        if (attempts.first() == null) attempts.last() else { attempts.first() }
+                    } else {
+                        throw AmbiguousBranching()
+                    }
+                }
             } else {
-                throw AmbiguousBranching()
+                throw AmbiguousBranching("attempts were ${attempts.first()} and ${attempts.last()}")
             }
         } else if (attempts.first() == false) {
             attempts.last()
@@ -96,7 +106,7 @@ open class GrammarContext(
 
     private fun Process.compile(): OnWord = when (this) {
         is Expanding -> expanding(obj)
-        is Process.Empty -> empty()
+        is Empty -> empty()
         is Dimension.Choice -> decision(Will.compile(), Wont.compile())
         is Dimension.Space -> throw NotImplementedError("Parallel processes not yet supported")
         is Dimension.Time -> sequence(Tick.compile(), Tock.compile())

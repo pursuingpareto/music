@@ -1,3 +1,5 @@
+package com.example.pg
+
 import org.example.pg.Grammar
 import org.example.pg.compose
 

@@ -1,10 +1,10 @@
 package org.example.pg
 
 import org.example.pg.stdlib.Lib
+import org.example.pg.stdlib.Lib.Possible
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
-    return if (includeStdLib) { Lib.StandardGrammar.extend(block) }
-    else { GrammarBuilder().apply(block).build() }
+    return if (includeStdLib) { Lib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
 }
 
 infix fun Grammar.extend(block: GrammarBuilder.() -> Unit) = this.extend(GrammarBuilder().apply(block).build())
@@ -57,7 +57,7 @@ class GrammarBuilder : Builder<Grammar> {
         private val name: Fn.Name,
         args: Array<out RequiredArg>? = null,
     ) : Builder<Fn.Definition> {
-    constructor(name: String, vararg args: RequiredArg) : this(Fn.Name(name), args)
+        constructor(name: String, vararg args: RequiredArg) : this(Fn.Name(name), args)
         private val args = args?.toList() ?: listOf()
         private var process: Process? = null
 
@@ -115,7 +115,7 @@ class GrammarBuilder : Builder<Grammar> {
          * Coerces receiver of [Any] type to [Process]. Fails unless receiver is
          * [String], [Process], or a 0-arity function.
          *
-         * When the receiver is a zero-arity function, call it and return an [Process.Optional] with
+         * When the receiver is a zero-arity function, call it and return an [Possible] with
          * child `process` equal to the coerced return value.
          *
          * When receiver is a String, first try to coerce it to a [Fn.Call].
@@ -131,12 +131,12 @@ class GrammarBuilder : Builder<Grammar> {
 
         private fun Function0<*>.asProcess(): Process {
             return invoke()?.asProcess()
-                ?.let { Process.Optional(it) }
+                ?.let { Possible(it) }
                 ?: throw DSLParseException("can't convert function to process")
         }
 
         private fun String.asProcess(): Process {
-            return if (isEmpty()) { Process.Empty } else { try {
+            return if (isEmpty()) { Empty } else { try {
                 Fn.Call(Fn.Name(this))
             } catch (_: IllegalArgumentException) {
                 Expanding(this)
