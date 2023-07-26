@@ -1,9 +1,7 @@
-package org.example.pg.stdlib
-import org.example.pg.* // ktlint-disable no-wildcard-imports
-import org.example.pg.Process
-import org.example.pg.Sequence
+@file:Suppress("FunctionName", "MemberVisibilityCanBePrivate")
 
-@Suppress("FunctionNames")
+package org.example.pg
+
 object Lib {
 
     /**

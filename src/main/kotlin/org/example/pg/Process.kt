@@ -46,7 +46,7 @@ sealed interface Process
 /**
  * The [Empty] process contains nothing, so it is always skipped at runtime.
  *
- * This process can occasionally be useful! The standard library's [Possible][org.example.pg.stdlib.Lib.Possible]
+ * This process can occasionally be useful! The standard library's [Possible][Lib.Possible]
  * process uses it!
  */
 object Empty : Process

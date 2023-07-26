@@ -1,8 +1,6 @@
-package com.example.pg
+package org.example.pg
 
-import org.example.pg.* // ktlint-disable no-wildcard-imports
-import org.example.pg.Sequence
-import org.example.pg.stdlib.Lib.Possible
+import org.example.pg.Lib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

@@ -1,6 +1,5 @@
-package com.example.pg
+package org.example.pg
 
-import org.example.pg.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

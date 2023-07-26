@@ -1,7 +1,6 @@
 package org.example.pg
 
-import org.example.pg.stdlib.Lib
-import org.example.pg.stdlib.Lib.Possible
+import org.example.pg.Lib.Possible
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
     return if (includeStdLib) { Lib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
@@ -57,7 +56,6 @@ class GrammarBuilder : Builder<Grammar> {
         private val name: Fn.Name,
         args: Array<out RequiredArg>? = null,
     ) : Builder<Fn.Definition> {
-        constructor(name: String, vararg args: RequiredArg) : this(Fn.Name(name), args)
         private val args = args?.toList() ?: listOf()
         private var process: Process? = null
 

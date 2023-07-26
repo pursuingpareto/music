@@ -1,14 +1,12 @@
-package com.example.pg.stdlib
+@file:Suppress("PropertyName", "MemberVisibilityCanBePrivate")
 
-import org.example.pg.Grammar
+package org.example.pg
+
 import org.example.pg.Keyword.END
-import org.example.pg.NoMatchForInput
-import org.example.pg.Program
-import org.example.pg.compose
-import org.example.pg.stdlib.Lib.OneOrMore
-import org.example.pg.stdlib.Lib.Possible
-import org.example.pg.stdlib.Lib.Repeating
-import org.example.pg.stdlib.Lib.ZeroOrMore
+import org.example.pg.Lib.OneOrMore
+import org.example.pg.Lib.Possible
+import org.example.pg.Lib.Repeating
+import org.example.pg.Lib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -33,7 +31,9 @@ class StandardLibrarySpec {
         // sanity check that it works as expected
         val prog = Program.from(grammar)
         prog(Heart)(beat)(beat)(beat)
-        assertThrows<NoMatchForInput> { prog("beeeet") }
+
+        // the beet is not a beat
+        assertThrows<NoMatchForInput> { prog("beet") }
     }
 
     @Nested
