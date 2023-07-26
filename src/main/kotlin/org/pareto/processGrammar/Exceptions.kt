@@ -1,4 +1,4 @@
-package org.example.pg
+package org.pareto.processGrammar
 
 open class ProcessException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
 

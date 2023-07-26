@@ -1,4 +1,4 @@
-package org.example.pg
+package org.pareto.processGrammar
 
 typealias OnWord = (Word) -> Any?
 

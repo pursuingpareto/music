@@ -1,4 +1,4 @@
-package org.example.pg
+package org.pareto.processGrammar
 
 typealias Sequence = Dimension.Time
 typealias Decision = Dimension.Choice

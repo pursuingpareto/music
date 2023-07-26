@@ -1,6 +1,6 @@
 @file:Suppress("FunctionName", "MemberVisibilityCanBePrivate")
 
-package org.example.pg
+package org.pareto.processGrammar
 
 object Lib {
 

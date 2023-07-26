@@ -1,6 +1,6 @@
-package org.example.pg
+package org.pareto.processGrammar
 
-import org.example.pg.Lib.Possible
+import org.pareto.processGrammar.Lib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

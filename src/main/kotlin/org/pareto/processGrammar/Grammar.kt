@@ -1,4 +1,4 @@
-package org.example.pg
+package org.pareto.processGrammar
 
 /**
  * A collection of [Fn.Definition] processes which together define a language of possible programs.

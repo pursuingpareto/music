@@ -1,12 +1,12 @@
 @file:Suppress("PropertyName", "MemberVisibilityCanBePrivate")
 
-package org.example.pg
+package org.pareto.processGrammar
 
-import org.example.pg.Keyword.END
-import org.example.pg.Lib.OneOrMore
-import org.example.pg.Lib.Possible
-import org.example.pg.Lib.Repeating
-import org.example.pg.Lib.ZeroOrMore
+import org.pareto.processGrammar.Keyword.END
+import org.pareto.processGrammar.Lib.OneOrMore
+import org.pareto.processGrammar.Lib.Possible
+import org.pareto.processGrammar.Lib.Repeating
+import org.pareto.processGrammar.Lib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

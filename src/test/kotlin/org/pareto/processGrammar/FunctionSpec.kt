@@ -1,4 +1,4 @@
-package org.example.pg
+package org.pareto.processGrammar
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

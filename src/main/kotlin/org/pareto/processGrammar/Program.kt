@@ -1,4 +1,4 @@
-package org.example.pg
+package org.pareto.processGrammar
 
 /**
  * A [Program] is compiled from a [Grammar] with a [Context].
@@ -24,7 +24,8 @@ class Program(private val namespace: Namespace) {
             f = when (val fw = this.f(word)) {
                 true -> { w: Word -> if (w == Keyword.END) true else throw ProcessExhausted() }
                 null -> throw NoMatchForInput(word)
-                else -> fw as OnWord }
+                else -> fw as OnWord
+            }
         }
 
     private fun begin(name: Fn.Name) = namespace[name]?.also { f = it }

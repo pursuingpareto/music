@@ -1,6 +1,6 @@
-package org.example.pg
+package org.pareto.processGrammar
 
-import org.example.pg.Lib.Possible
+import org.pareto.processGrammar.Lib.Possible
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
     return if (includeStdLib) { Lib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
