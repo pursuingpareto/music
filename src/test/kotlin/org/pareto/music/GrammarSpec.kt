@@ -59,12 +59,6 @@ class GrammarSpec {
                 ),
             )
         }
-
-        @Test
-        fun `cannot be child of defined process`() {
-            val name = Fn.Name("SomeProcess")
-            assertThrows<RuntimeException> { Fn.Definition(name, Silence) }
-        }
     }
 
     @Nested
@@ -86,11 +80,6 @@ class GrammarSpec {
             val map = mapOf(definition.name to definition.music)
             val process = map[call.name]
             assertEquals(process, definition.music)
-        }
-
-        @Test
-        fun `defined processes cannot contain single expanding process`() {
-            assertThrows<RuntimeException> { Fn.Definition(Fn.Name("A"), Note("foo")) }
         }
     }
 
@@ -143,18 +132,6 @@ class GrammarSpec {
         inner class ParallelProcesses {
             @Test
             fun `cannot have two empty layers`() {
-                assertThrows<RuntimeException> {
-                    Harmony(
-                        Silence,
-                        Silence
-                    )
-                }
-
-                Harmony(
-                    Note("a"),
-                    Silence,
-                )
-
                 Harmony(
                     Silence,
                     Note("b"),

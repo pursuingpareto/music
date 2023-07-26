@@ -5,7 +5,7 @@ typealias Decision = Dimension.Choice
 typealias Harmony  = Dimension.Space
 
 infix fun Music.then(that: Music) = Melody(this, that)
-infix fun Music.and (that: Music) = Harmony(this, that)
+infix fun Sound.and (that: Music) = Harmony(that, this)
 infix fun Sound.or  (that: Music) = Decision(this, that)
 
 /**
@@ -71,7 +71,9 @@ data class Note(val obj: Name) : Sound {
     }
 }
 
-sealed interface Fn : Sound {
+sealed interface NonTerminal : Sound
+
+sealed interface Fn : NonTerminal {
 
     val name: Name
 
@@ -96,14 +98,9 @@ sealed interface Fn : Sound {
      */
     data class Definition(
         override val name: Name,
-        val music: Music,
+        val music: NonTerminal,
         val requiredArgs: List<RequiredArg> = listOf(),
-    ) : Fn {
-
-        init {
-            require(music !is Silence && music !is Note)
-        }
-    }
+    ) : Fn
 }
 
 /**
@@ -119,7 +116,7 @@ sealed interface Fn : Sound {
 sealed class Dimension(
     private val left: Music,
     private val right: Music,
-) : Sound {
+) : NonTerminal {
 
     /**
      * ## `a > b`
@@ -161,13 +158,8 @@ sealed class Dimension(
      */
     data class Space(
         val Front: Music,
-        val Back: Music,
-    ) : Dimension(Front, Back) {
-
-        init {
-            require(Front !is Silence || Back !is Silence)
-        }
-    }
+        val Back: Sound,
+    ) : Dimension(Front, Back)
 }
 
 /**

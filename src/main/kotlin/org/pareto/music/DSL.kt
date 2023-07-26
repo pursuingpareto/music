@@ -57,7 +57,7 @@ class GrammarBuilder : Builder<Grammar> {
         args: Array<out RequiredArg>? = null,
     ) : Builder<Fn.Definition> {
         private val args = args?.toList() ?: listOf()
-        private var music: Music? = null
+        private var music: NonTerminal? = null
 
         /**
          * Converts `"Foo"("a")` to a [Fn.Call] with single param `Expanding("a")`
@@ -104,10 +104,10 @@ class GrammarBuilder : Builder<Grammar> {
          * ```
          */
         infix fun Any.and(that: Any) = assignToProcess {
-            Dimension.Space(this.asMusic(), that.asMusic())
+            Dimension.Space(this.asMusic(), that.asSound())
         }
 
-        private fun <T : Music> assignToProcess(block: () -> T): T = block().also { music = it }
+        private fun <T : NonTerminal> assignToProcess(block: () -> T): T = block().also { music = it }
 
         /**
          * Coerces receiver of [Any] type to [Music]. Fails unless receiver is
