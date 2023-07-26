@@ -12,7 +12,7 @@ class FunctionSpec {
     inner class DSL {
         @Test
         fun `functions can require params by defining with parens`() {
-            val grammar = Grammar.compose {
+            val grammar = Grammar.compose(false) {
                 "Function"("a", "b", "c") {
                     "a" then "b" then "c"
                 }
@@ -23,7 +23,7 @@ class FunctionSpec {
 
         @Test
         fun `references can pass params into function with required args`() {
-            val grammar = Grammar.compose {
+            val grammar = Grammar.compose(false) {
                 "Function"("a") {
                     "a" then "b"
                 }
@@ -42,15 +42,15 @@ class FunctionSpec {
 
         @Test
         fun `parameters can be passed through multiple functions`() {
-            val grammar = Grammar.compose {
-
+            val grammar = Grammar.compose(false) {
                 "Repeat"("process") {
                     "process" then { "Repeat"("process") }
                 }
 
                 "Song"("hook") {
                     "intro" then "Repeat"(
-                        "verse" then "Chorus"("hook"))
+                        "verse" then "Chorus"("hook")
+                    )
                         .then("conclusion")
                 }
 
@@ -68,8 +68,8 @@ class FunctionSpec {
         }
 
         @Test
-        fun `parameter passing works`()  {
-            val grammar = Grammar.compose {
+        fun `parameter passing works`() {
+            val grammar = Grammar.compose(false) {
                 "Function"("a") {
                     "a" then "b"
                 }
@@ -88,7 +88,7 @@ class FunctionSpec {
 
         @Test
         fun `programs fail as expected while passing params`() {
-            val grammar = Grammar.compose {
+            val grammar = Grammar.compose(false) {
                 "Function"("a") {
                     "a" then "b"
                 }
@@ -105,7 +105,7 @@ class FunctionSpec {
         @Test
         fun `required params must appear in function body`() = todo {
             assertThrows<DSLParseException> {
-                Grammar.compose {
+                Grammar.compose(false) {
                     "Function"("a", "b", "c", "d") {
                         "a" then "b" then "c"
                     }
@@ -116,7 +116,7 @@ class FunctionSpec {
         @Test
         fun `param names must be unique within definition site`() = todo {
             assertThrows<DSLParseException> {
-                Grammar.compose {
+                Grammar.compose(false) {
                     "Function"("a", "b", "b") {
                         "a" then "b" then "c"
                     }
@@ -126,7 +126,7 @@ class FunctionSpec {
 
         @Test
         fun `repeated calls work`() {
-            val grammar = Grammar.compose {
+            val grammar = Grammar.compose(false) {
                 "Repeated"("process") {
                     "process" then "Repeated"("process")
                 }
@@ -163,7 +163,7 @@ class FunctionSpec {
             val tick = body.Tick
             assertIs<Fn.Call>(tick)
             assertEquals("Function", tick.name.toString())
-            assertEquals("Function(foo)" , tick.params.first().canonical())
+            assertEquals("Function(foo)", tick.params.first().canonical())
             val prog = Program.from(grammar).invoke("Caller")
             prog.invoke("foo")
             prog.invoke("b")

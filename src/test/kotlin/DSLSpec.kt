@@ -61,7 +61,7 @@ class DSLSpec {
 
         @Test
         fun `defined processes are names followed by braces enclosing a process`() {
-            val grammar = Grammar.compose {
+            val grammar = Grammar.compose(false) {
                 "DefinedProcessName" {
                     "a" then "b"
                 }
@@ -73,7 +73,7 @@ class DSLSpec {
 
         @Test
         fun `grammars can be extended`() {
-            val grammar = Grammar.compose {
+            val grammar = Grammar.compose(false) {
                 "DefinedProcessName" {
                     "a" then "b"
                 }

@@ -1,4 +1,4 @@
-import org.example.pg.*
+import org.example.pg.* // ktlint-disable no-wildcard-imports
 import org.example.pg.Sequence
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

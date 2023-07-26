@@ -4,6 +4,12 @@ typealias Sequence = Dimension.Time
 typealias Decision = Dimension.Choice
 typealias Parallel = Dimension.Space
 
+infix fun Process.then(that: Process) = Dimension.Time(this, that)
+
+infix fun Process.and(that: Process) = Dimension.Space(this, that)
+
+infix fun Process.or(that: Process) = Dimension.Choice(this, that)
+
 /**
  * A container for various process types.  Each subtype can be represented
  * in a "canonical" form by calling [Process.canonical].
@@ -123,12 +129,6 @@ sealed class Dimension(
     private val left: Process,
     private val right: Process,
 ) : Process {
-
-    infix fun Process.then(that: Process) = Time(this, that)
-
-    infix fun Process.and(that: Process) = Space(this, that)
-
-    infix fun Process.or(that: Process) = Choice(this, that)
 
     /**
      * ## `a > b`
