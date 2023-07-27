@@ -1,4 +1,13 @@
-package org.pareto.music
+package org.pareto.music.compiler.thread_validator
+
+import org.pareto.music.Fn
+import org.pareto.music.Grammar
+import org.pareto.music.Keyword
+import org.pareto.music.Namespace
+import org.pareto.music.NoMatchForInput
+import org.pareto.music.Note
+import org.pareto.music.ProcessExhausted
+import org.pareto.music.Word
 
 /**
  * A [Program] is compiled from a [Grammar] with a [Context].

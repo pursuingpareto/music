@@ -10,7 +10,7 @@ import org.pareto.music.Lib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.pareto.music.Lib.Multiple
+import org.pareto.music.compiler.thread_validator.Program
 import kotlin.test.Test
 import kotlin.test.todo
 

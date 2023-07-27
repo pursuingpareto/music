@@ -1,5 +1,7 @@
 package org.pareto.music
 
+import org.pareto.music.compiler.thread_validator.OnWord
+
 typealias Word = String
 
 typealias RequiredArg = String

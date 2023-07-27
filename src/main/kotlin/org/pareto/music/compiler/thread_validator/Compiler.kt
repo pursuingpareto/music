@@ -1,34 +1,37 @@
-package org.pareto.music
+package org.pareto.music.compiler.thread_validator
+
+import org.pareto.music.AmbiguousBranching
+import org.pareto.music.compiler.ArgMap
+import org.pareto.music.Fn
+import org.pareto.music.compiler.FunctionCompiler
+import org.pareto.music.compiler.Globals
+import org.pareto.music.Grammar
+import org.pareto.music.compiler.GrammarCompiler
+import org.pareto.music.compiler.Compiler
+import org.pareto.music.Keyword
+import org.pareto.music.compiler.Locals
+import org.pareto.music.Music
+import org.pareto.music.NoMatchForInput
+import org.pareto.music.Note
+import org.pareto.music.ProcessException
+import org.pareto.music.UnrunnableProcess
+import org.pareto.music.Word
 
 typealias OnWord = (Word) -> Any?
 
-typealias Deferred<T> = () -> T
-
-typealias Globals = Map<Fn.Name, Deferred<OnWord>>
-
-typealias Locals = Map<Note.Name, Deferred<OnWord>>
-
-typealias ArgMap = Map<Fn.Name, List<Note.Name>>
-
 /**
- * The goal of compilation is to turn a "dumb" [Music] into a function that we can actually call.
- *
- * The signature of these compiled functions is called [OnWord].
- *
  * A [Music] can be compiled to an [OnWord] function in a bare [Context] if it requires no
  * "extra" information to run.
+ *
+ * @sample Compiler
  */
-interface Context {
+interface Context: Compiler<OnWord> {
 
-    /**
-     * Compiles a [Silence] process into an [OnWord] function.
-     */
-    fun empty(): OnWord = { input -> if (input == Keyword.END) true else null }
+    override val empty: OnWord
+        get() = { input -> if (input == Keyword.END) true else null }
 
-    /**
-     * Compiles an [Note] process into an [OnWord] function.
-     */
-    fun expanding(name: Note.Name): OnWord = { input ->
+
+    override fun note(name: Note.Name): OnWord = { input ->
         if ("$name" == input) {
             true
         } else {
@@ -36,14 +39,10 @@ interface Context {
         }
     }
 
-    /**
-     * Compiles a [Decision] process into an [OnWord] function.
-     *
-     * TODO - cleanup messy nested branches!
-     */
-    fun decision(a: OnWord, b: OnWord): OnWord = { input: Word ->
+    // TODO - cleanup messy nested branches!
+    override fun decision(will: OnWord, wont: OnWord): OnWord = { input: Word ->
         // apply the functions for each branch to the input, mapping exceptions to `false`
-        val attempts = listOf(a, b).map { f ->
+        val attempts = listOf(will, wont).map { f ->
             try {
                 f(input)
             } catch (e: ProcessException) {
@@ -76,18 +75,19 @@ interface Context {
         }
     }
 
-    /**
-     * Compiles a [Melody] process into an [OnWord] function.
-     *
-     * TODO - implement as `tailrec`
-     */
+    // TODO - implement as `tailrec`
     @Suppress("UNCHECKED_CAST")
-    fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->
-        when (val xw = x(word)) {
-            null -> y(word)
-            true -> { w: Word -> y(w) }
-            else -> sequence(xw as OnWord, y)
+    override fun melody(tick: OnWord, tock: OnWord): OnWord = { word: Word ->
+        when (val xw = tick(word)) {
+            null -> tock(word)
+            true -> { w: Word -> tock(w) }
+            is Function1<*, *> -> melody(xw as OnWord, tock)
+            else -> throw UnrunnableProcess("Failed to cast $xw to OnWord")
         }
+    }
+
+    override fun harmony(front: OnWord, back: OnWord): OnWord {
+        TODO("Not yet implemented")
     }
 }
 
@@ -98,35 +98,21 @@ interface Context {
  */
 open class GrammarContext(
     protected val grammar: Grammar,
-) : Context {
+) : Context, GrammarCompiler<OnWord> {
 
-    private val functionArgs: ArgMap =
+    override val functionArgs: ArgMap =
         grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Note.Name(arg) } }
 
-    val functionNamespace: Globals =
+    val functionNamespace: Globals<OnWord> =
         grammar.definitions.associate { it.name to { it.music.compile() } }
-
-    private fun Music.compile(): OnWord = when (this) {
-        is Note -> expanding(obj)
-        is Silence -> empty()
-        is Dimension.Choice -> decision(Will.compile(), Wont.compile())
-        is Dimension.Space -> throw NotImplementedError("Parallel processes not yet supported")
-        is Dimension.Time -> sequence(Tick.compile(), Tock.compile())
-        is Fn.Call -> call(name, name.materializeWith(this))
-        is Fn.Definition -> throw Error("Definitions are not directly compiled")
-    }
 
     /**
      * Compiles a [Fn.Call] process into an [OnWord] function.
      */
-    private fun call(name: Fn.Name, replacements: Locals): OnWord {
+    override fun call(name: Fn.Name, replacements: Locals<OnWord>): OnWord {
         return FunctionContext(name, replacements).call()
     }
 
-    private fun Fn.Name.materializeWith(call: Fn.Call): Locals {
-        return functionArgs[this]?.zip(call.params.map { { it.compile() } })?.toMap()
-            ?: throw UnrunnableProcess("could not materialize args for ${call.name}")
-    }
 
     /**
      * [Music]es compiled in a [FunctionContext] may also rely on a collections of [locals] which
@@ -156,23 +142,23 @@ open class GrammarContext(
      *   2. a [FunctionContext] while referencing "RepeatTwice" so we can "remember" that we passed "CoinFlip" as a replacement for "x"
      */
     inner class FunctionContext(
-        private val name: Fn.Name,
-        private val locals: Locals,
-    ) : GrammarContext(grammar) {
+        override val name: Fn.Name,
+        override val locals: Locals<OnWord>,
+    ) : GrammarContext(grammar), FunctionCompiler<OnWord> {
 
         /**
          * Compiles a [Note] process into an [OnWord] function and--if this [Note]
          * is a param in a function--makes the appropriate replacement.
          */
-        override fun expanding(name: Note.Name): OnWord {
+        override fun note(name: Note.Name): OnWord {
             val f = locals[name]
-            return if (f == null) { super.expanding(name) } else { input: Word -> f()(input) }
+            return if (f == null) { super.note(name) } else { input: Word -> f()(input) }
         }
 
         /**
          * Compiles the [Fn.Call] process associated with THIS context to an [OnWord] function.
          */
-        fun call(): OnWord {
+        override fun call(): OnWord {
             val f = functionNamespace[name] ?: throw UnrunnableProcess()
             return { input -> f()(input) }
         }

@@ -65,7 +65,7 @@ This `FlipForever` function is a **sequence** with two steps:
 
 And so on. 
 
-But we can actually model this even more cleanly. Because, really, the "do something forever" process has it's own "shape" which can be pulled out and reused.
+But we can actually model this even more cleanly. Because, really, the "do something forever" process has its own "shape" which can be pulled out and reused.
 
 #### Example 4b (**Functions with arguments**): Flipping a coin forever
 
@@ -136,9 +136,9 @@ val program = Program(coinGrammar)
     .compile()
 ```
 
-Now, we can run this program and we will see a sequence of "heads" and "tails" appear in our console!
+Now, we can run this program, and we will see a sequence of "heads" and "tails" appear in our console!
 
-## Appendix: Class Hierarchy from [Music.kt](./src/main//kotlin/org/pareto/music/Music.kt)
+## Appendix: Class Hierarchy from [Music.kt](./src/main/kotlin/org/pareto/music/Music.kt)
 
 It turns out we can represent data as `music` too. In this case, the **decision** processes (`a OR b`) correspond to a sealed class hierarchy!
 
