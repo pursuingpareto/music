@@ -10,7 +10,9 @@ import org.pareto.music.Lib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.Lib.Multiple
 import kotlin.test.Test
+import kotlin.test.todo
 
 class StandardLibrarySpec {
 
@@ -95,6 +97,14 @@ class StandardLibrarySpec {
             assertDoesNotThrow { Program.from(g)("G")("END") }
             assertDoesNotThrow { Program.from(g)("G")("x")("END") }
             assertDoesNotThrow { Program.from(g)("G")("x")("x")("END") }
+        }
+
+        @Test
+        fun `Multiple behaves as expected`() = todo {
+            /**
+             * implement this once Parallel processes are supported and "Multiple" has been
+             * added to [Lib.StandardGrammar]
+             */
         }
     }
 }

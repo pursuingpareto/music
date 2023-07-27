@@ -78,6 +78,8 @@ interface Context {
 
     /**
      * Compiles a [Melody] process into an [OnWord] function.
+     *
+     * TODO - implement as `tailrec`
      */
     @Suppress("UNCHECKED_CAST")
     fun sequence(x: OnWord, y: OnWord): OnWord = { word: Word ->

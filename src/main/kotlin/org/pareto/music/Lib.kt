@@ -124,22 +124,32 @@ object Lib {
     /**
      * A Possible process can be skipped or evaluated at runtime.
      */
-    fun Possible(sound: Sound): Sound = sound or EMPTY
+    fun Possible(sound: Sound): Decision = sound or EMPTY
 
     /**
      * A Repeating process repeats forever.
+     *
+     * TODO - implement as `tailrec`
      */
-    fun Repeating(music: Music): Music = music then Repeating(music)
+    fun Repeating(music: Music): Melody = music then Repeating(music)
 
     /**
      * A OneOrMore process happens 1 or more times.
+     *
+     * TODO - implement as `tailrec`
      */
-    fun OneOrMore(music: Music): Sound = music then Possible(OneOrMore(music))
+    fun OneOrMore(music: Music): Melody = music then Possible(OneOrMore(music))
 
     /**
      * A ZeroOrMore process happens 0 or more times.
      */
-    fun ZeroOrMore(music: Music): Music = Possible(OneOrMore(music))
+    fun ZeroOrMore(music: Music): Decision = Possible(OneOrMore(music))
+
+    /**
+     * Converts a [Sound] into 1 or more concurrent copies of itself.
+     */
+    @Suppress("Unused")
+    fun Multiple(sound: Sound): Harmony = sound and Possible(Multiple(sound))
 
     /**
      * The Empty process. Always skipped at runtime.
