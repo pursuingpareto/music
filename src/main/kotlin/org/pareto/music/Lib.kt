@@ -27,7 +27,7 @@ object Lib {
     /**
      * helper string to make your DSL grammars look nice <3
      */
-    const val process = "process"
+    val process = Note.Name("process")
 
     /**
      * The [StandardGrammar] is prepended to every grammar built with the DSL.

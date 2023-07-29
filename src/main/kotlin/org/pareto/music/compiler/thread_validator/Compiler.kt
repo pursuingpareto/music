@@ -99,7 +99,7 @@ open class GrammarContext(
 ) : Context, PiecewiseCompiler<OnWord> {
 
     private val functionArgs: ArgMap =
-        grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Note.Name(arg) } }
+        grammar.definitions.associate { it.name to it.requiredArgs }
 
     val functionNamespace: Globals<OnWord> =
         grammar.definitions.associate { it.name to { compile(it.music) } }
@@ -116,7 +116,7 @@ open class GrammarContext(
         return FunctionContext(call.name, args).call()
     }
 
-    override fun define(name: Fn.Name, args: List<RequiredArg>, music: OnWord): OnWord {
+    override fun define(name: Fn.Name, args: List<Note.Name>, music: OnWord): OnWord {
         throw RuntimeException("not how you compile definitions here")
     }
 

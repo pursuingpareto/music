@@ -54,12 +54,16 @@ object Silence : Music
  */
 sealed interface Sound : Music
 
+sealed interface Expandable : Music {
+    val name: MusicName
+}
+
 /**
  * A [Note] is terminal, so it has no children.
  *
  * @param name A serial representation of this terminal "object".
  */
-data class Note(val name: Name) : Sound {
+data class Note(override val name: Name) : Sound, Expandable {
     constructor(s: String) : this(Name(s))
     class Name(text: Text.nonPascalCase) : MusicName(text) {
         companion object {
@@ -87,7 +91,7 @@ sealed interface Fn : NonTerminal {
      *
      * @param name the [Fn.Name] of the corresponding [Definition] process.
      */
-    data class Call(override val name: Name, val params: Params = listOf()) : Fn
+    data class Call(override val name: Name, val params: Params = listOf()) : Fn, Expandable
 
     /**
      * A process with a [Fn.Name] which can be referred to by a [Call]. Names
@@ -99,8 +103,11 @@ sealed interface Fn : NonTerminal {
     data class Definition(
         override val name: Name,
         val music: NonTerminal,
-        val requiredArgs: List<RequiredArg> = listOf(),
-    ) : Fn
+        val requiredArgs: List<Note.Name> = listOf(),
+    ) : Fn {
+
+        init { Validate.argsAreUsedInBody(this) }
+    }
 }
 
 /**
@@ -114,8 +121,8 @@ sealed interface Fn : NonTerminal {
  */
 @Suppress("unused", "PropertyName")
 sealed class Dimension(
-    private val left: Music,
-    private val right: Music,
+    val Left: Music,
+    val Right: Music,
 ) : NonTerminal {
 
     /**

@@ -34,7 +34,7 @@ class GrammarBuilder : Builder<Grammar> {
 
     operator fun String.invoke(vararg args: RequiredArg, block: FunctionDefinitionBuilder.() -> Unit) = this.apply {
         name = Fn.Name(this).also { name ->
-            definedBuilder = FunctionDefinitionBuilder(name, args).also { builder ->
+            definedBuilder = FunctionDefinitionBuilder(name, args.map {Note.Name(it)}).also { builder ->
                 builder.apply(block)
                 components.add(builder.build())
             }
@@ -54,9 +54,12 @@ class GrammarBuilder : Builder<Grammar> {
      */
     class FunctionDefinitionBuilder(
         private val name: Fn.Name,
-        args: Array<out RequiredArg>? = null,
+        args: List<Note.Name>? = null,
     ) : Builder<Fn.Definition> {
-        private val args = args?.toList() ?: listOf()
+
+        init { validateArgNamesUnique(args) }
+
+        private val args: List<Note.Name> = args?.toList() ?: listOf()
         private var music: NonTerminal? = null
 
         /**
@@ -142,6 +145,12 @@ class GrammarBuilder : Builder<Grammar> {
                 Note(Note.Name(this))
             }
             }
+        }
+
+        companion object {
+            fun validateArgNamesUnique(args: List<Note.Name>?) =
+                args?.let { if (it.size != it.toSet().size)
+                    throw DSLParseException("argument names must be unique within a definition") }
         }
     }
 }

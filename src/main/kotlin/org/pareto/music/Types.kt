@@ -65,9 +65,7 @@ sealed class MusicName(val text: Text) {
 
 typealias RequiredArg = String
 
-typealias Param = Music
-
-typealias Params = List<Param>
+typealias Params = List<Music>
 
 typealias FunctionNamespace<T> = Map<Fn.Name, T>
 

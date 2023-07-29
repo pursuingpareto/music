@@ -70,7 +70,7 @@ interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
     /**
      * Compiles a [Fn.Definition] to [T].
      */
-    fun define(name: Fn.Name, args: List<RequiredArg>, music: T): T
+    fun define(name: Fn.Name, args: List<Note.Name>, music: T): T
 
     fun define(def: Fn.Definition) = define(def.name, def.requiredArgs, compile(def.music))
 

@@ -61,6 +61,8 @@ class FunctionSpec {
                 }
             }
 
+            println(grammar.canonical())
+
             val prog = Program.from(grammar)
             prog("Song")("intro")("verse")("hook")
             prog("middle")
@@ -105,7 +107,7 @@ class FunctionSpec {
         }
 
         @Test
-        fun `required params must appear in function body`() = todo {
+        fun `required params must appear in function body`() {
             assertThrows<DSLParseException> {
                 Grammar.compose(false) {
                     "Function"("a", "b", "c", "d") {
@@ -116,7 +118,7 @@ class FunctionSpec {
         }
 
         @Test
-        fun `param names must be unique within definition site`() = todo {
+        fun `param names must be unique within definition site`() {
             assertThrows<DSLParseException> {
                 Grammar.compose(false) {
                     "Function"("a", "b", "b") {
