@@ -31,7 +31,7 @@ class Grammar(val definitions: List<Fn.Definition>) {
         }
 
         private fun validateUniqueNames(components: List<Fn.Definition>) {
-            fun message(name: ProcessName, count: Int) = "$name defined $count times"
+            fun message(name: MusicName, count: Int) = "$name defined $count times"
             val errors = components
                 .map { it.name }
                 .groupingBy { it }

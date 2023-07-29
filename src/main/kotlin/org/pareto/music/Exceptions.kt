@@ -11,7 +11,7 @@ class ProcessExhausted(message: String? = null, cause: Throwable? = null) : Unru
 class AmbiguousBranching(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause)
 
 class NoMatchForInput(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause) {
-    constructor(word: String) : this(message = "No way to transition to $word")
+    constructor(word: Text) : this(message = "No way to transition to $word")
 }
 
 class DSLParseException(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)

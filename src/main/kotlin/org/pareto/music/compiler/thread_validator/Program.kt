@@ -3,11 +3,11 @@ package org.pareto.music.compiler.thread_validator
 import org.pareto.music.Fn
 import org.pareto.music.Grammar
 import org.pareto.music.Keyword
-import org.pareto.music.Namespace
+import org.pareto.music.FunctionNamespace
 import org.pareto.music.NoMatchForInput
 import org.pareto.music.Note
 import org.pareto.music.ProcessExhausted
-import org.pareto.music.Word
+import org.pareto.music.Text
 
 /**
  * A [Program] is compiled from a [Grammar] with a [Context].
@@ -19,23 +19,27 @@ import org.pareto.music.Word
  *
  * When words can be unambiguously assigned.
  */
-class Program(private val namespace: Namespace) {
+class Program(private val namespace: FunctionNamespace<OnWord>) {
 
     /**
      * [f] is a function which gets called and reassigned every time
      * a [Program] is [invoke]d
      */
-    private var f: OnWord = { word -> begin(Fn.Name(word)) }
+    private var f: OnWord = { word ->
+        if (word is Text.PascalCase) begin(Fn.Name(word))
+        else throw NoMatchForInput("First invoking must be with PascalCase term.")}
 
     @Suppress("UNCHECKED_CAST")
-    operator fun invoke(word: Word): Program = this
+    operator fun invoke(word: Text): Program = this
         .apply {
             f = when (val fw = this.f(word)) {
-                true -> { w: Word -> if (w == Keyword.END) true else throw ProcessExhausted() }
+                true -> { w: Text -> if (w.value == Keyword.END) true else throw ProcessExhausted() }
                 null -> throw NoMatchForInput(word)
                 else -> fw as OnWord
             }
         }
+
+    operator fun invoke(s: String): Program = invoke(Text.from(s))
 
     private fun begin(name: Fn.Name) = namespace[name]?.also { f = it }
         ?: throw NoMatchForInput(name.toString())

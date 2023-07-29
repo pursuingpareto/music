@@ -57,16 +57,14 @@ sealed interface Sound : Music
 /**
  * A [Note] is terminal, so it has no children.
  *
- * @param obj A serial representation of this terminal "object".
+ * @param name A serial representation of this terminal "object".
  */
-data class Note(val obj: Name) : Sound {
-    constructor(name: String) : this(Name(name))
-
-    class Name(name: String) : ProcessName(name) {
-
-        init {
-            require(!name.isPascalCase())
-            require(name.isNotEmpty())
+data class Note(val name: Name) : Sound {
+    constructor(s: String) : this(Name(s))
+    class Name(text: Text.nonPascalCase) : MusicName(text) {
+        companion object {
+            operator fun invoke(s: String): Name =
+                Name(Text.nonPascalCase(s))
         }
     }
 }
@@ -77,9 +75,11 @@ sealed interface Fn : NonTerminal {
 
     val name: Name
 
-    class Name(name: String) : ProcessName(name) {
-
-        init { require(name.isPascalCase()) }
+    class Name(text: Text.PascalCase) : MusicName(text) {
+        companion object {
+            operator fun invoke(s: String): Name =
+                Name(Text.PascalCase(s))
+        }
     }
 
     /**
@@ -172,5 +172,5 @@ fun Music.canonical(): String = when (this) {
     is Fn.Definition ->    "$name(${requiredArgs.joinToString()})\n  : ${music.canonical()}"
     is Silence ->          "[ ]"
     is Fn.Call ->          "$name(${params.joinToString { it.canonical() }})"
-    is Note ->             obj.toString()
+    is Note ->             name.toString()
 }

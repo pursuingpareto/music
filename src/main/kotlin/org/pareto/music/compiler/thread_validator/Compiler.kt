@@ -3,36 +3,35 @@ package org.pareto.music.compiler.thread_validator
 import org.pareto.music.AmbiguousBranching
 import org.pareto.music.compiler.ArgMap
 import org.pareto.music.Fn
-import org.pareto.music.compiler.FunctionCompiler
 import org.pareto.music.compiler.Globals
 import org.pareto.music.Grammar
-import org.pareto.music.compiler.GrammarCompiler
-import org.pareto.music.compiler.Compiler
 import org.pareto.music.Keyword
 import org.pareto.music.compiler.Locals
 import org.pareto.music.Music
 import org.pareto.music.NoMatchForInput
 import org.pareto.music.Note
 import org.pareto.music.ProcessException
+import org.pareto.music.RequiredArg
 import org.pareto.music.UnrunnableProcess
-import org.pareto.music.Word
+import org.pareto.music.Text
+import org.pareto.music.compiler.PiecewiseCompiler
 
-typealias OnWord = (Word) -> Any?
+typealias OnWord = (Text) -> Any?
 
 /**
  * A [Music] can be compiled to an [OnWord] function in a bare [Context] if it requires no
  * "extra" information to run.
  *
- * @sample Compiler
+ * @sample PiecewiseCompiler
  */
-interface Context: Compiler<OnWord> {
+interface Context: PiecewiseCompiler<OnWord> {
 
     override val empty: OnWord
-        get() = { input -> if (input == Keyword.END) true else null }
+        get() = { input -> if (input.value == Keyword.END) true else null }
 
 
     override fun note(name: Note.Name): OnWord = { input ->
-        if ("$name" == input) {
+        if (name.value == input.value) {
             true
         } else {
             throw NoMatchForInput("$input/$name")
@@ -40,14 +39,11 @@ interface Context: Compiler<OnWord> {
     }
 
     // TODO - cleanup messy nested branches!
-    override fun decision(will: OnWord, wont: OnWord): OnWord = { input: Word ->
+    override fun decision(will: OnWord, wont: OnWord): OnWord = { input: Text ->
         // apply the functions for each branch to the input, mapping exceptions to `false`
         val attempts = listOf(will, wont).map { f ->
-            try {
-                f(input)
-            } catch (e: ProcessException) {
-                false
-            }
+            try { f(input) }
+            catch (e: ProcessException) { false }
         }
 
         // Every branch failed to match the input
@@ -60,7 +56,9 @@ interface Context: Compiler<OnWord> {
                     true
                 } else {
                     if (attempts.any { it is Function1<*, *> }) {
-                        if (attempts.first() == null) attempts.last() else { attempts.first() }
+                        if (attempts.first() == null) attempts.last() else {
+                            attempts.first()
+                        }
                     } else {
                         throw AmbiguousBranching()
                     }
@@ -77,10 +75,10 @@ interface Context: Compiler<OnWord> {
 
     // TODO - implement as `tailrec`
     @Suppress("UNCHECKED_CAST")
-    override fun melody(tick: OnWord, tock: OnWord): OnWord = { word: Word ->
+    override fun melody(tick: OnWord, tock: OnWord): OnWord = { word: Text ->
         when (val xw = tick(word)) {
             null -> tock(word)
-            true -> { w: Word -> tock(w) }
+            true -> { w: Text -> tock(w) }
             is Function1<*, *> -> melody(xw as OnWord, tock)
             else -> throw UnrunnableProcess("Failed to cast $xw to OnWord")
         }
@@ -98,19 +96,34 @@ interface Context: Compiler<OnWord> {
  */
 open class GrammarContext(
     protected val grammar: Grammar,
-) : Context, GrammarCompiler<OnWord> {
+) : Context, PiecewiseCompiler<OnWord> {
 
-    override val functionArgs: ArgMap =
+    private val functionArgs: ArgMap =
         grammar.definitions.associate { it.name to it.requiredArgs.map { arg -> Note.Name(arg) } }
 
     val functionNamespace: Globals<OnWord> =
-        grammar.definitions.associate { it.name to { it.music.compile() } }
+        grammar.definitions.associate { it.name to { compile(it.music) } }
 
     /**
      * Compiles a [Fn.Call] process into an [OnWord] function.
      */
     override fun call(name: Fn.Name, replacements: Locals<OnWord>): OnWord {
         return FunctionContext(name, replacements).call()
+    }
+
+    override fun call(call: Fn.Call): OnWord {
+        val args = call.name.materializeWith(call)
+        return FunctionContext(call.name, args).call()
+    }
+
+    override fun define(name: Fn.Name, args: List<RequiredArg>, music: OnWord): OnWord {
+        throw RuntimeException("not how you compile definitions here")
+    }
+
+    private fun Fn.Name.materializeWith(call: Fn.Call): Locals<OnWord> {
+        return functionArgs[this]
+            ?.zip(call.params.map { { compile(it) } })?.toMap()
+            ?: throw UnrunnableProcess("could not materialize args for ${call.name}")
     }
 
 
@@ -142,9 +155,9 @@ open class GrammarContext(
      *   2. a [FunctionContext] while referencing "RepeatTwice" so we can "remember" that we passed "CoinFlip" as a replacement for "x"
      */
     inner class FunctionContext(
-        override val name: Fn.Name,
-        override val locals: Locals<OnWord>,
-    ) : GrammarContext(grammar), FunctionCompiler<OnWord> {
+        val name: Fn.Name,
+        private val locals: Locals<OnWord>,
+    ) : GrammarContext(grammar), PiecewiseCompiler<OnWord> {
 
         /**
          * Compiles a [Note] process into an [OnWord] function and--if this [Note]
@@ -152,13 +165,13 @@ open class GrammarContext(
          */
         override fun note(name: Note.Name): OnWord {
             val f = locals[name]
-            return if (f == null) { super.note(name) } else { input: Word -> f()(input) }
+            return if (f == null) { super<GrammarContext>.note(name) } else { input: Text -> f()(input) }
         }
 
         /**
          * Compiles the [Fn.Call] process associated with THIS context to an [OnWord] function.
          */
-        override fun call(): OnWord {
+        fun call(): OnWord {
             val f = functionNamespace[name] ?: throw UnrunnableProcess()
             return { input -> f()(input) }
         }

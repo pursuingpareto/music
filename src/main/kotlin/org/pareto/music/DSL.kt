@@ -139,7 +139,7 @@ class GrammarBuilder : Builder<Grammar> {
             return if (isEmpty()) { Silence } else { try {
                 Fn.Call(Fn.Name(this))
             } catch (_: IllegalArgumentException) {
-                Note(this)
+                Note(Note.Name(this))
             }
             }
         }

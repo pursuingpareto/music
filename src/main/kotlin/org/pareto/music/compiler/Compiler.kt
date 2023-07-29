@@ -3,9 +3,14 @@ package org.pareto.music.compiler
 import org.pareto.music.Dimension
 import org.pareto.music.Fn
 import org.pareto.music.Music
+import org.pareto.music.Decision
+import org.pareto.music.Melody
+import org.pareto.music.Harmony
 import org.pareto.music.Note
+import org.pareto.music.RequiredArg
 import org.pareto.music.Silence
-import org.pareto.music.UnrunnableProcess
+import org.pareto.music.Sound
+
 
 typealias Deferred<T> = () -> T
 
@@ -20,7 +25,7 @@ typealias ArgMap = Map<Fn.Name, List<Note.Name>>
  *
  * The signature of these compiled functions is [T].
  */
-interface Compiler<T> {
+interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
 
     /**
      * [Silence] compiled to [T].
@@ -32,48 +37,53 @@ interface Compiler<T> {
      */
     fun note(name: Note.Name): T
 
+    fun note(note: Note): T = note(note.name)
+
     /**
      * Compiles a [Decision] to [T].
      */
     fun decision(will: T, wont: T): T
+
+    fun decision(will: Sound, wont: Music): T = decision(compile(will), compile(wont))
 
     /**
      * Compiles a [Melody] to [T].
      */
     fun melody(tick: T, tock: T): T
 
+    fun melody(tick: Music, tock: Music): T = melody(compile(tick), compile(tock))
+
     /**
      * Compiles a [Harmony] to [T].
      */
     fun harmony(front: T, back: T): T
-}
 
+    fun harmony(front: Music, back: Sound): T = harmony(compile(front), compile(back))
 
-interface GrammarCompiler<T>: Compiler<T> {
-    val functionArgs: ArgMap
-
+    /**
+     * Compiles a [Fn.Call] to [T].
+     */
     fun call(name: Fn.Name, replacements: Locals<T>): T
 
-    private fun Fn.Name.materializeWith(call: Fn.Call): Locals<T> {
-        return functionArgs[this]
-            ?.zip(call.params.map { { it.compile() } })?.toMap()
-            ?: throw UnrunnableProcess("could not materialize args for ${call.name}")
+    fun call(call: Fn.Call): T = throw NotImplementedError()
+
+    /**
+     * Compiles a [Fn.Definition] to [T].
+     */
+    fun define(name: Fn.Name, args: List<RequiredArg>, music: T): T
+
+    fun define(def: Fn.Definition) = define(def.name, def.requiredArgs, compile(def.music))
+
+
+    override fun compile(music: Music): T = with(music) {
+        when (this) {
+            is Note -> note(this)
+            is Silence -> empty
+            is Dimension.Choice -> decision(Will, Wont)
+            is Dimension.Space -> harmony(Front, Back)
+            is Dimension.Time -> melody(Tick, Tock)
+            is Fn.Call -> call(this)
+            is Fn.Definition -> define(this)
+        }
     }
-
-    fun Music.compile(): T = when (this) {
-        is Note -> note(obj)
-        is Silence -> empty
-        is Dimension.Choice -> decision(Will.compile(), Wont.compile())
-        is Dimension.Space -> harmony(Front.compile(), Back.compile())
-        is Dimension.Time -> melody(Tick.compile(), Tock.compile())
-        is Fn.Call -> call(name, name.materializeWith(this))
-        is Fn.Definition -> throw Error("Definitions are not directly compiled")
-    }
-}
-
-interface FunctionCompiler<T>: GrammarCompiler<T> {
-    val name: Fn.Name
-    val locals: Locals<T>
-
-    fun call(): T
 }

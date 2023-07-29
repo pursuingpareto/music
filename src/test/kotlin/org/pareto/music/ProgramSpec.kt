@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pareto.music.compiler.thread_validator.Program
+import java.lang.IllegalArgumentException
 
 class ProgramSpec {
 
@@ -351,7 +352,7 @@ class ProgramSpec {
         assertThrows<NoMatchForInput> {
             Program.from(g)("F")("F")
         }
-        assertThrows<NoMatchForInput> {
+        assertThrows<IllegalArgumentException> {
             Program.from(g)("F")("")
         }
     }

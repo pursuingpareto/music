@@ -161,13 +161,13 @@ class DSLSpec {
             val tock = process.Tock
             assertIs<Melody>(tick)
             assertIs<Note>(tock)
-            assertEquals("d", tock.obj.toString())
+            assertEquals("d", tock.name.toString())
 
             val ticktick = tick.Tick
             val ticktock = tick.Tock
             assertIs<Melody>(ticktick)
             assertIs<Note>(ticktock)
-            assertEquals("c", ticktock.obj.toString())
+            assertEquals("c", ticktock.name.toString())
 
             val tickticktick = ticktick.Tick
             val tickticktock = ticktick.Tock
@@ -188,13 +188,13 @@ class DSLSpec {
             val tock = process.Tock
             assertIs<Melody>(tick)
             assertIs<Note>(tock)
-            assertEquals("d", tock.obj.toString())
+            assertEquals("d", tock.name.toString())
 
             val ticktick = tick.Tick
             val ticktock = tick.Tock
             assertIs<Melody>(ticktick)
             assertIs<Note>(ticktock)
-            assertEquals("c", ticktock.obj.toString())
+            assertEquals("c", ticktock.name.toString())
 
             val tickticktick = ticktick.Tick
             val tickticktock = ticktick.Tock
@@ -215,13 +215,13 @@ class DSLSpec {
             val tock = process.Tock
             assertIs<Note>(tick)
             assertIs<Melody>(tock)
-            assertEquals("a", tick.obj.toString())
+            assertEquals("a", tick.name.toString())
 
             val tocktick = tock.Tick
             val tocktock = tock.Tock
             assertIs<Melody>(tocktock)
             assertIs<Note>(tocktick)
-            assertEquals("b", tocktick.obj.toString())
+            assertEquals("b", tocktick.name.toString())
 
             val tocktocktick = tocktock.Tick
             val tocktocktock = tocktock.Tock
