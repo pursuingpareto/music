@@ -25,7 +25,7 @@ object StdLib {
     const val ZeroOrMore = "ZeroOrMore"
 
     /**
-     * helper string to make your DSL grammars look nice <3
+     * grace note to make your DSL grammars look nice <3
      */
     val process = Note.Name("process")
 
@@ -68,10 +68,8 @@ object StdLib {
                 Fn.Name(Possible),
                 Decision(
                     Note(process),
-                    Silence
-                ),
-                listOf(process)
-            ),
+                    Silence),
+                listOf(process)),
             Fn.Definition(
                 Fn.Name(Repeating),
                 Melody(
@@ -79,12 +77,8 @@ object StdLib {
                     Fn.Call(
                         Fn.Name(Repeating),
                         listOf(
-                            Note(process)
-                        )
-                    )
-                ),
-                listOf(process)
-            ),
+                            Note(process)))),
+                listOf(process)),
             Fn.Definition(
                 Fn.Name(OneOrMore),
                 Melody(
@@ -95,14 +89,8 @@ object StdLib {
                             Fn.Call(
                                 Fn.Name(OneOrMore),
                                 listOf(
-                                    Note(process)
-                                )
-                            )
-                        )
-                    )
-                ),
-                listOf(process)
-            ),
+                                    Note(process)))))),
+                listOf(process)),
             Fn.Definition(
                 Fn.Name(ZeroOrMore),
                 Fn.Call(
@@ -111,15 +99,8 @@ object StdLib {
                         Fn.Call(
                             Fn.Name(OneOrMore),
                             listOf(
-                                Note(process)
-                            )
-                        )
-                    )
-                ),
-                listOf(process)
-            )
-        )
-    )
+                                Note(process))))),
+                listOf(process))))
 
     /**
      * A Possible process can be skipped or evaluated at runtime.
