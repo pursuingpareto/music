@@ -173,11 +173,19 @@ sealed class Dimension(
  * Produces a canonical, language-agnostic string representation of this process.
  */
 fun Music.canonical(): String = when (this) {
-    is Dimension.Choice -> "${Will.canonical()} | ${Wont.canonical()}"
+    is Dimension.Choice -> when(Wont) {
+               // this indicates "Optional" Music
+               Silence ->  "[ ${Will.canonical()} ]"
+                  else ->   "${Will.canonical()} | ${Wont.canonical()}" }
     is Dimension.Space ->  "${Front.canonical()} & ${Back.canonical()}"
-    is Dimension.Time ->   "${Tick.canonical()} > ${Tock.canonical()}"
-    is Fn.Definition ->    "$name(${requiredArgs.joinToString()})\n  : ${music.canonical()}"
+    is Dimension.Time ->    "${Tick.canonical()} > ${Tock.canonical()}"
+    is Fn.Definition -> { if (requiredArgs.isNotEmpty())
+        "$name(${requiredArgs.joinToString()})\n  : ${music.canonical()}"
+        else "$name\n  : ${music.canonical()}"
+    }
     is Silence ->          "[ ]"
-    is Fn.Call ->          "$name(${params.joinToString { it.canonical() }})"
+    is Fn.Call -> { if (params.isNotEmpty())
+        "$name(${params.joinToString { it.canonical() }})"
+        else "$name" }
     is Note ->             name.toString()
 }

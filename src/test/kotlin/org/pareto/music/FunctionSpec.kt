@@ -61,8 +61,6 @@ class FunctionSpec {
                 }
             }
 
-            println(grammar.canonical())
-
             val prog = Program.from(grammar)
             prog("Song")("intro")("verse")("hook")
             prog("middle")

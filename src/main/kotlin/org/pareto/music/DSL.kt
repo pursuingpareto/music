@@ -3,7 +3,7 @@ package org.pareto.music
 import org.pareto.music.StdLib.Possible
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
-    return if (includeStdLib) { StdLib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
+    return if (includeStdLib) { StdLib.StandardGrammar.extend(block) } else { Grammar(GrammarBuilder().apply(block).build()) }
 }
 
 infix fun Grammar.extend(block: GrammarBuilder.() -> Unit) = this.extend(GrammarBuilder().apply(block).build())
@@ -25,12 +25,12 @@ interface Builder<T> { fun build(): T }
  * }
  * ```
  */
-class GrammarBuilder : Builder<Grammar> {
+class GrammarBuilder : Builder<List<Fn.Definition>> {
     private var name: Fn.Name? = null
     private val components = mutableListOf<Fn.Definition>()
     private var definedBuilder: FunctionDefinitionBuilder? = null
 
-    override fun build() = Grammar(components)
+    override fun build() = components.toList()
 
     operator fun String.invoke(vararg args: String, block: FunctionDefinitionBuilder.() -> Unit) = this.apply {
         name = Fn.Name(this).also { name ->

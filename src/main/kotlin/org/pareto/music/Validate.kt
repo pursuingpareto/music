@@ -22,6 +22,16 @@ object Validate {
             throw GrammarValidationException("Defined process names must be unique: ${errors.joinToString(separator = ", ")}")
         }
     }
+
+    fun allFunctionCallsHaveDefinitions(grammar: Grammar) {
+        val definitionNames = grammar.definitions.map { it.name }.toSet()
+        val undefined = grammar.definitions.flatMap { def ->
+            def.getDescendents { (it is Fn.Call) && !definitionNames.contains(it.name)} }
+            .filterIsInstance<Fn.Call>()
+            .map { it.name }
+        if (undefined.isNotEmpty()) throw GrammarValidationException("The following functions were called but never defined: ${
+            undefined.joinToString(", " ){ it.value }}")
+    }
     //endregion
 
 

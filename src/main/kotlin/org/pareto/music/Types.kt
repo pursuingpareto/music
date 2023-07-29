@@ -72,12 +72,13 @@ class Grammar(val definitions: List<Fn.Definition>) {
     init {
         Validate.atLeastOneDefinition(this)
         Validate.uniqueFunctionNames(this)
+        Validate.allFunctionCallsHaveDefinitions(this)
     }
 
     /**
      * Creates a new grammar from two existing grammars.
      */
-    infix fun extend(other: Grammar) = Grammar(this.definitions + other.definitions)
+    infix fun extend(newDefinitions: List<Fn.Definition>) = Grammar(this.definitions + newDefinitions)
 
     /**
      * Produces a canonical, language-agnostic string representation of this grammar.

@@ -3,9 +3,10 @@ package org.pareto.music
 import org.pareto.music.StdLib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
-import kotlin.test.todo
+
 
 class GrammarSpec {
     @Nested
@@ -161,13 +162,12 @@ class GrammarSpec {
         @Test
         fun `can be extended with other grammars`() {
             val g1 = Grammar(listOf(Fn.Definition(Fn.Name("Foo"), ab)))
-            val g2 = Grammar(listOf(Fn.Definition(Fn.Name("Bar"), cd)))
-            val g3 = g1 extend g2
+            val g3 = g1 extend listOf(Fn.Definition(Fn.Name("Bar"), cd))
             assertEquals(2, g3.definitions.count())
         }
 
         @Test
-        fun `have a kotlin-agnostic string representation`() = todo {
+        fun `have a kotlin-agnostic string representation`() {
             assertEquals("abc", Note("abc").canonical())
             assertEquals("[ a ]", Possible(Note("a")).canonical())
             assertEquals("a > b", Melody(Note("a"), Note("b")).canonical())
@@ -195,8 +195,8 @@ class GrammarSpec {
             )
             assertEquals(
                 """
-              Process2
-                : Process1
+                    Process2
+                      : Process1
                 """.trimIndent(),
                 p2.canonical(),
             )
@@ -216,7 +216,24 @@ class GrammarSpec {
 
         @Test
         fun `definitions for all references must exist`() {
-            todo { }
+            assertThrows<GrammarValidationException> {
+                Grammar.compose {
+                    "X" {
+                        "a" then "B"
+                    }
+                }
+            }
+
+            assertDoesNotThrow {
+                Grammar.compose {
+                    "Twice"("x") {
+                        "x" then "x"
+                    }
+                    "F" {
+                        "Twice"("Twice"("Twice"("z")))
+                    }
+                }
+            }
         }
     }
 }
