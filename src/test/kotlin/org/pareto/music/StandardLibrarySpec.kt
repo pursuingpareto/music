@@ -3,10 +3,10 @@
 package org.pareto.music
 
 import org.pareto.music.Keyword.END
-import org.pareto.music.Lib.OneOrMore
-import org.pareto.music.Lib.Possible
-import org.pareto.music.Lib.Repeating
-import org.pareto.music.Lib.ZeroOrMore
+import org.pareto.music.StdLib.OneOrMore
+import org.pareto.music.StdLib.Possible
+import org.pareto.music.StdLib.Repeating
+import org.pareto.music.StdLib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -103,7 +103,7 @@ class StandardLibrarySpec {
         fun `Multiple behaves as expected`() = todo {
             /**
              * implement this once Parallel processes are supported and "Multiple" has been
-             * added to [Lib.StandardGrammar]
+             * added to [StdLib.StandardGrammar]
              */
         }
     }

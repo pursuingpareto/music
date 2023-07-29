@@ -1,6 +1,6 @@
 package org.pareto.music
 
-import org.pareto.music.Lib.Possible
+import org.pareto.music.StdLib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

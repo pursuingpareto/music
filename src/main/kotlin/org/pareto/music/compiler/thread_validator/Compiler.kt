@@ -11,7 +11,6 @@ import org.pareto.music.Music
 import org.pareto.music.NoMatchForInput
 import org.pareto.music.Note
 import org.pareto.music.ProcessException
-import org.pareto.music.RequiredArg
 import org.pareto.music.UnrunnableProcess
 import org.pareto.music.Text
 import org.pareto.music.compiler.PiecewiseCompiler

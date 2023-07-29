@@ -7,7 +7,6 @@ import org.pareto.music.Decision
 import org.pareto.music.Melody
 import org.pareto.music.Harmony
 import org.pareto.music.Note
-import org.pareto.music.RequiredArg
 import org.pareto.music.Silence
 import org.pareto.music.Sound
 

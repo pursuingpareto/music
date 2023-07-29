@@ -63,10 +63,55 @@ sealed class MusicName(val text: Text) {
     }
 }
 
-typealias RequiredArg = String
 
-typealias Params = List<Music>
+/**
+ * A collection of [Fn.Definition] processes which together define a language of possible programs.
+ */
+class Grammar(val definitions: List<Fn.Definition>) {
 
+    init {
+        Validate.atLeastOneDefinition(this)
+        Validate.uniqueFunctionNames(this)
+    }
+
+    /**
+     * Creates a new grammar from two existing grammars.
+     */
+    infix fun extend(other: Grammar) = Grammar(this.definitions + other.definitions)
+
+    /**
+     * Produces a canonical, language-agnostic string representation of this grammar.
+     */
+    fun canonical() = definitions.joinToString(separator = "\n\n") { it.canonical() }
+
+    override fun toString() = canonical()
+
+    companion object
+}
+
+
+//region Exceptions
+open class ProcessException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
+
+class GrammarValidationException(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)
+
+open class UnrunnableProcess(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)
+
+class ProcessExhausted(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause)
+
+class AmbiguousBranching(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause)
+
+class NoMatchForInput(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause) {
+    constructor(word: Text) : this(message = "No way to transition to $word")
+}
+
+class DSLParseException(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)
+//endregion
+
+
+/**
+ * A namespace that maps [Fn.Name] to some type T
+ */
 typealias FunctionNamespace<T> = Map<Fn.Name, T>
 
 

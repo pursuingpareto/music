@@ -2,7 +2,7 @@
 
 package org.pareto.music
 
-object Lib {
+object StdLib {
 
     /**
      * @see [Possible]

@@ -44,7 +44,7 @@ sealed interface Music
 /**
  * The [Silence] object contains nothing, so it is always skipped at runtime.
  *
- * This process can occasionally be useful! The standard library's [Possible][Lib.Possible]
+ * This process can occasionally be useful! The standard library's [Possible][StdLib.Possible]
  * process uses it!
  */
 object Silence : Music
@@ -91,7 +91,7 @@ sealed interface Fn : NonTerminal {
      *
      * @param name the [Fn.Name] of the corresponding [Definition] process.
      */
-    data class Call(override val name: Name, val params: Params = listOf()) : Fn, Expandable
+    data class Call(override val name: Name, val params: List<Music> = listOf()) : Fn, Expandable
 
     /**
      * A process with a [Fn.Name] which can be referred to by a [Call]. Names

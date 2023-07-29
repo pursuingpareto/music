@@ -1,9 +1,9 @@
 package org.pareto.music
 
-import org.pareto.music.Lib.Possible
+import org.pareto.music.StdLib.Possible
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
-    return if (includeStdLib) { Lib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
+    return if (includeStdLib) { StdLib.StandardGrammar.extend(block) } else { GrammarBuilder().apply(block).build() }
 }
 
 infix fun Grammar.extend(block: GrammarBuilder.() -> Unit) = this.extend(GrammarBuilder().apply(block).build())
@@ -32,7 +32,7 @@ class GrammarBuilder : Builder<Grammar> {
 
     override fun build() = Grammar(components)
 
-    operator fun String.invoke(vararg args: RequiredArg, block: FunctionDefinitionBuilder.() -> Unit) = this.apply {
+    operator fun String.invoke(vararg args: String, block: FunctionDefinitionBuilder.() -> Unit) = this.apply {
         name = Fn.Name(this).also { name ->
             definedBuilder = FunctionDefinitionBuilder(name, args.map {Note.Name(it)}).also { builder ->
                 builder.apply(block)
