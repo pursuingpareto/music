@@ -121,20 +121,6 @@ fun main() {
             Exclaim("There were" then Plural(Noun) then Gerund(Verb) then "on the" then Noun)
         }
 
-//        Story {
-//            "It was a " then Adjective then " November day." then
-//                    " I woke up to the " then Adjective then " smell of " then
-//                    Noun then " roasting in the " then Noun then " downstairs." then
-//                    " I " then PastTense(Verb) then " down the stairs" then
-//                    " to see if I could " then Adverb then " help " then Verb then
-//                    " the dinner." then " My mom said, \"See if your " then Noun then
-//                    " needs a fresh " then Noun then ".\" So I carried a tray of " then
-//                    Plural(Noun) then " into the " then Gerund(Verb) then " room." then
-//                    " When I got there, I couldn't believe my " then Plural(Noun) then "!" then
-//                    " There were " then Plural(Noun) then " " then Gerund(Verb) then " on the " then
-//                    Noun then "!"
-//        }
-
         Adjective {
             independent or boring or furry or brave or
             depressed or humble or loving or grumpy or
