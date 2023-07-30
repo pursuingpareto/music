@@ -77,7 +77,7 @@ sealed interface NonTerminal : Sound
 
 sealed interface Fn : NonTerminal {
 
-    fun call(params: List<Music>, namespace: FunctionNamespace<Fn.Definition>): Music =
+    fun call(params: List<Music>, namespace: FunctionNamespace<Definition>): Music =
         namespace[name]?.replacingArgsWith(params, namespace) ?: throw UnrunnableProcess("No function with name $name in namespace")
 
     val name: Name

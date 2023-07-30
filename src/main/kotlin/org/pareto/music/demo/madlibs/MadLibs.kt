@@ -1,11 +1,19 @@
 package org.pareto.music.demo.madlibs
 
 import org.pareto.music.Grammar
-import org.pareto.music.canonical
 import org.pareto.music.compose
-import org.pareto.music.play.RandomChoiceMusician
+import org.pareto.music.perform.Decider
+import org.pareto.music.perform.StringBuilderPerformer
 
+@Suppress("LocalVariableName")
 fun main() {
+
+    fun show(string: String) =
+        string.split(" ")
+            .chunked(10) { it.joinToString(" ") }
+            .joinToString("\n")
+            .also { println(it) }
+
     //region helper strings
     val Adjective = "Adjective"
     val independent = "independent"
@@ -68,11 +76,64 @@ fun main() {
     val PastTense = "PastTense"
     val Plural = "Plural"
     val Gerund = "Gerund"
+    val Sentence = "Sentence"
+    val Exclaim = "Exclaim"
+    val Quote = "Quote"
+    val State = "State"
+    val text = "text"
     val noun = "noun"
     val verb = "verb"
+    val punctuation = "punctuation"
+
+    val beginning = "beginning"
+    val middle = "middle"
+    val end = "end"
+
+    val MadLibs = "MadLibs"
+    val MLIntro = "MLIntro"
+    val MLMiddle = "MLMiddle"
+    val MLEnd = "MLEnd"
     //endregion
 
     val madLibs = Grammar.compose {
+
+        Story(beginning, middle, end) {
+            beginning then middle then end
+        }
+
+        MadLibs {
+            Story(MLIntro, MLMiddle, MLEnd)
+        }
+
+        MLIntro {
+            State("It was a" then Adjective then "November day") then
+            State("I woke up to the" then Adjective then "smell of" then Noun then "roasting in the" then Noun then "downstairs")
+        }
+
+        MLMiddle {
+            State("So I" then PastTense(Verb) then "down the stairs" then "to see if I could" then Adverb then "help" then Verb then "the dinner") then
+            "My mom said," then Quote(State("See if your" then Noun then "needs a fresh" then Noun)) then
+            State("So I carried a tray of" then Plural(Noun) then "into the" then Gerund(Verb) then "room")
+        }
+
+        MLEnd {
+            Exclaim("When I got there, I couldn't believe my" then Plural(Noun)) then
+            Exclaim("There were" then Plural(Noun) then Gerund(Verb) then "on the" then Noun)
+        }
+
+//        Story {
+//            "It was a " then Adjective then " November day." then
+//                    " I woke up to the " then Adjective then " smell of " then
+//                    Noun then " roasting in the " then Noun then " downstairs." then
+//                    " I " then PastTense(Verb) then " down the stairs" then
+//                    " to see if I could " then Adverb then " help " then Verb then
+//                    " the dinner." then " My mom said, \"See if your " then Noun then
+//                    " needs a fresh " then Noun then ".\" So I carried a tray of " then
+//                    Plural(Noun) then " into the " then Gerund(Verb) then " room." then
+//                    " When I got there, I couldn't believe my " then Plural(Noun) then "!" then
+//                    " There were " then Plural(Noun) then " " then Gerund(Verb) then " on the " then
+//                    Noun then "!"
+//        }
 
         Adjective {
             independent or boring or furry or brave or
@@ -101,35 +162,35 @@ fun main() {
         }
 
         PastTense(verb) {
-            verb then "ed"
+            verb and "ed"
         }
 
         Plural(noun) {
-            noun then "s"
+            noun and "s"
         }
 
         Gerund(verb) {
-            verb then "ing"
+            verb and "ing"
         }
 
-        Story {
-            "It was a " then Adjective then " November day." then
-            " I woke up to the " then Adjective then " smell of " then
-            Noun then " roasting in the " then Noun then " downstairs." then
-            " I " then PastTense(Verb) then " down the stairs" then
-            " to see if I could " then Adverb then " help " then Verb then
-            " the dinner." then " My mom said, \"See if your " then Noun then
-            " needs a fresh " then Noun then ".\" So I carried a tray of " then
-            Plural(Noun) then " into the " then Gerund(Verb) then " room." then
-            " When I got there, I couldn't believe my " then Plural(Noun) then "!" then
-            " There were " then Plural(Noun) then " " then Gerund(Verb) then " on the " then
-            Noun then "!"
+        Quote(text) {
+            "\"" and text and "\""
+        }
+
+        Sentence(text, punctuation) {
+            text and punctuation
+        }
+
+        Exclaim(text) {
+            Sentence(text, "!")
+        }
+
+        State(text) {
+            Sentence(text, ".")
         }
     }
 
-    val storyCollector = mutableListOf<String>()
-    val player = RandomChoiceMusician(madLibs) { storyCollector.add(it.canonical())}
-    player.play(Story)
-    println(storyCollector.joinToString("").split(" ")
-        .chunked(10) { it.joinToString(" ") }.joinToString("\n"))
+    val player = StringBuilderPerformer(madLibs, Decider.UniformRandom)
+    val storyText = player.play(MadLibs)
+    show(storyText)
 }

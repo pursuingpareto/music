@@ -138,6 +138,16 @@ val program = Program(coinGrammar)
 
 Now, we can run this program, and we will see a sequence of "heads" and "tails" appear in our console!
 
+## First Steps
+
+1. Checkout one of the demos in the [demos](./src/main/kotlin/org/pareto/music/demo) package. I recommend starting with [MadLibs.kt](./src/main/kotlin/org/pareto/music/demo/madlibs/MadLibs.kt). You can run the `main` function by pressing the green triangle in the gutter (if you're using intellij).
+
+2. Let your curiosity drive your exploration of the code! A recommendation to get you started:
+   
+   - Start with [Music.kt](./src/main/kotlin/org/pareto/music/Music.kt) to learn how the `Music` tree is structured.
+   
+   - Explore some tests in [music/test](./src/test/kotlin/org/pareto/music) to see how `Music` is "composed" and "performed"
+
 ## Appendix: Class Hierarchy from [Music.kt](./src/main/kotlin/org/pareto/music/Music.kt)
 
 It turns out we can represent data as `music` too. In this case, the **decision** processes (`a OR b`) correspond to a sealed class hierarchy!

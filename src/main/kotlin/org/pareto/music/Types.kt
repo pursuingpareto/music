@@ -17,6 +17,7 @@ sealed interface Text {
         init { require(value.isPascalCase()) }
     }
 
+    @Suppress("ClassName")
     @JvmInline
     /**
      * [nonPascalCase] [Text]s are anything that is not [PascalCase]
