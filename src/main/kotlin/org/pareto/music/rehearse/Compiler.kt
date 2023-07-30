@@ -1,4 +1,4 @@
-package org.pareto.music.compiler
+package org.pareto.music.rehearse
 
 import org.pareto.music.Dimension
 import org.pareto.music.Fn

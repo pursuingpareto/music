@@ -3,10 +3,9 @@ package org.pareto.music
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pareto.music.compiler.thread_validator.Program
+import org.pareto.music.rehearse.thread_validator.Program
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.todo
 
 class FunctionSpec {
 

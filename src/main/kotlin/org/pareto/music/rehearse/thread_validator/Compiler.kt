@@ -1,19 +1,19 @@
-package org.pareto.music.compiler.thread_validator
+package org.pareto.music.rehearse.thread_validator
 
 import org.pareto.music.AmbiguousBranching
-import org.pareto.music.compiler.ArgMap
+import org.pareto.music.rehearse.ArgMap
 import org.pareto.music.Fn
-import org.pareto.music.compiler.Globals
+import org.pareto.music.rehearse.Globals
 import org.pareto.music.Grammar
 import org.pareto.music.Keyword
-import org.pareto.music.compiler.Locals
+import org.pareto.music.rehearse.Locals
 import org.pareto.music.Music
 import org.pareto.music.NoMatchForInput
 import org.pareto.music.Note
 import org.pareto.music.ProcessException
 import org.pareto.music.UnrunnableProcess
 import org.pareto.music.Text
-import org.pareto.music.compiler.PiecewiseCompiler
+import org.pareto.music.rehearse.PiecewiseCompiler
 
 typealias OnWord = (Text) -> Any?
 

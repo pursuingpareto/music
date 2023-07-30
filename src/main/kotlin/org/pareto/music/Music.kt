@@ -77,6 +77,9 @@ sealed interface NonTerminal : Sound
 
 sealed interface Fn : NonTerminal {
 
+    fun call(params: List<Music>, namespace: FunctionNamespace<Fn.Definition>): Music =
+        namespace[name]?.replacingArgsWith(params, namespace) ?: throw UnrunnableProcess("No function with name $name in namespace")
+
     val name: Name
 
     class Name(text: Text.PascalCase) : MusicName(text) {
@@ -107,6 +110,11 @@ sealed interface Fn : NonTerminal {
     ) : Fn {
 
         init { Validate.argsAreUsedInBody(this) }
+
+        fun replacingArgsWith(params: List<Music>, namespace: FunctionNamespace<Definition>): Music {
+            val map = requiredArgs.zip(params).associate { it.first to it.second }.toMap()
+            return music.rebuildWithReplacements(map, namespace)
+        }
     }
 }
 
@@ -188,4 +196,16 @@ fun Music.canonical(): String = when (this) {
         "$name(${params.joinToString { it.canonical() }})"
         else "$name" }
     is Note ->             name.toString()
+}
+
+fun Music.rebuildWithReplacements(replacements: Map<Note.Name, Music>, namespace: FunctionNamespace<Fn.Definition>): Music {
+    return when(this) {
+        is Silence -> Silence
+        is Note -> replacements[this.name] ?: this
+        is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.rebuildWithReplacements(replacements, namespace) ?: throw UnrunnableProcess("name $name does not exist in namespace")
+        is Decision -> Decision(Will.rebuildWithReplacements(replacements, namespace) as Sound, Wont.rebuildWithReplacements(replacements, namespace))
+        is Harmony -> Harmony(Front.rebuildWithReplacements(replacements, namespace), Back.rebuildWithReplacements(replacements, namespace) as Sound)
+        is Melody -> Melody(Tick.rebuildWithReplacements(replacements, namespace), Tock.rebuildWithReplacements(replacements, namespace))
+        is Fn.Definition -> TODO()
+    }
 }

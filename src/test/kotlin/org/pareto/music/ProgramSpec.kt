@@ -3,7 +3,7 @@ package org.pareto.music
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pareto.music.compiler.thread_validator.Program
+import org.pareto.music.rehearse.thread_validator.Program
 import java.lang.IllegalArgumentException
 
 class ProgramSpec {

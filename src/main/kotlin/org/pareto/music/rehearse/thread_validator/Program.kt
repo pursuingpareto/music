@@ -1,4 +1,4 @@
-package org.pareto.music.compiler.thread_validator
+package org.pareto.music.rehearse.thread_validator
 
 import org.pareto.music.Fn
 import org.pareto.music.Grammar
