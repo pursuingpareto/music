@@ -93,6 +93,9 @@ fun main() {
     val MLIntro = "MLIntro"
     val MLMiddle = "MLMiddle"
     val MLEnd = "MLEnd"
+
+    val PlayMadLibs = "PlayMadLibs"
+    val macguffin = "macguffin"
     //endregion
 
     val madLibs = Grammar.compose {
@@ -101,24 +104,31 @@ fun main() {
             beginning then middle then end
         }
 
-        MadLibs {
-            Story(MLIntro, MLMiddle, MLEnd)
+        // TODO - Ensure function call params get resolved before passing into the
+        //  corresponding function. This kind of thing doesn't work when you pass
+        //  it a function call. The call is *separately* realized three times.
+        MadLibs(macguffin) {
+            Story(MLIntro(macguffin), MLMiddle(macguffin), MLEnd(macguffin))
         }
 
-        MLIntro {
+        PlayMadLibs {
+            MadLibs(banana)
+        }
+
+        MLIntro(macguffin) {
             State("It was a" then Adjective then "November day") then
-            State("I woke up to the" then Adjective then "smell of" then Noun then "roasting in the" then Noun then "downstairs")
+            State("I woke up to the" then Adjective then "smell of" then macguffin then "roasting in the" then Noun then "downstairs")
         }
 
-        MLMiddle {
-            State("So I" then PastTense(Verb) then "down the stairs" then "to see if I could" then Adverb then "help" then Verb then "the dinner") then
+        MLMiddle(macguffin) {
+            State("So I" then PastTense(Verb) then "down the stairs" then "to see if I could" then Adverb then "help" then Verb then "the" then macguffin) then
             "My mom said," then Quote(State("See if your" then Noun then "needs a fresh" then Noun)) then
             State("So I carried a tray of" then Plural(Noun) then "into the" then Gerund(Verb) then "room")
         }
 
-        MLEnd {
+        MLEnd(macguffin) {
             Exclaim("When I got there, I couldn't believe my" then Plural(Noun)) then
-            Exclaim("There were" then Plural(Noun) then Gerund(Verb) then "on the" then Noun)
+            Exclaim("There were" then Plural(Noun) then Gerund(Verb) then "on the" then macguffin)
         }
 
         Adjective {
@@ -177,6 +187,6 @@ fun main() {
     }
 
     val player = StringBuilderPerformer(madLibs, Decider.UniformRandom)
-    val storyText = player.play(MadLibs)
+    val storyText = player.play(PlayMadLibs)
     show(storyText)
 }

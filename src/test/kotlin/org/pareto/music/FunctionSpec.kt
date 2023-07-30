@@ -3,10 +3,14 @@ package org.pareto.music
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.perform.Decider
+import org.pareto.music.perform.StringBuilderPerformer
 import org.pareto.music.rehearse.thread_validator.Program
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.todo
 
+@Suppress("LocalVariableName")
 class FunctionSpec {
 
     @Nested
@@ -85,6 +89,41 @@ class FunctionSpec {
             prog("b")
             prog("bar")
             prog("END")
+        }
+
+        @Test
+        fun `function calls are resolved eagerly when passed as params`() = todo {
+            val Quadruple = "Quadruple"
+            val word = "word"
+            val RandomWord = "RandomWord"
+            val Times16 = "Times16"
+            val w = "w"
+            val x = "x"
+            val y = "y"
+            val z = "z"
+            val RandomWord16Times = "RandomWord16Times"
+
+            val grammar = Grammar.compose {
+                Times16(word) {
+                    Quadruple(Quadruple(word))
+                }
+
+                Quadruple(word) {
+                    word then word then word then word
+                }
+
+                RandomWord {
+                    w or x or y or z
+                }
+
+                RandomWord16Times {
+                    Times16(RandomWord)
+                }
+            }
+            val string = StringBuilderPerformer(grammar, Decider.UniformRandom).play(RandomWord16Times)
+            println(string)
+            assertEquals(16, string.split(" ").size)
+            assert(string.split(" ").toSet().size == 1)
         }
 
         @Test
