@@ -82,7 +82,7 @@ interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
             is Dimension.Space -> harmony(Front, Back)
             is Dimension.Time -> melody(Tick, Tock)
             is Fn.Call -> call(this)
-            is Fn.Definition -> define(this)
+//            is Fn.Definition -> define(this)
         }
     }
 }

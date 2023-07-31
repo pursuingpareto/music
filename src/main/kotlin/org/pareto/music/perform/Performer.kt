@@ -89,7 +89,7 @@ interface PiecewisePerformer<T>: Performer<T> {
         is Harmony -> playHarmony(this)
         is Decision -> decide(Decider.Dilemma(Will, Wont)).choice.play()
         is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.play() ?: throw UnrunnableProcess("name does not exist in namespace")
-        is Fn.Definition -> throw RuntimeException("should never get here")
+//        is Fn.Definition -> throw RuntimeException("should never get here")
     }
 }
 
