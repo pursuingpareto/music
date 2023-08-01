@@ -50,6 +50,8 @@ object Validate {
 
 
     //region Helpers
+
+    private fun Fn.Definition.getDescendents(where: (Music) -> Boolean): List<Music> = this.music.getDescendents(where)
     private fun Music.getDescendents(where: (Music) -> Boolean): List<Music> = when (this) {
         Silence -> listOf()
         is Dimension -> {
@@ -67,7 +69,7 @@ object Validate {
                     else -> descendents.addAll(it.getDescendents(where) ) } }
             descendents
         }
-        is Fn.Definition -> this.music.getDescendents(where)
+//        is Fn.Definition -> this.music.getDescendents(where)
         is Note -> if (where(this)) listOf(this) else listOf()
     }
     //endregion

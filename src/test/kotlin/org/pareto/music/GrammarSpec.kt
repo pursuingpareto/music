@@ -7,7 +7,6 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-
 class GrammarSpec {
     @Nested
     inner class Terminals {

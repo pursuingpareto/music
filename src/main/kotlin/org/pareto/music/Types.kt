@@ -59,8 +59,7 @@ sealed class MusicName(val text: Text) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is MusicName) return false
-        if (text != other.text) return false
-        return true
+        return text == other.text
     }
 }
 
