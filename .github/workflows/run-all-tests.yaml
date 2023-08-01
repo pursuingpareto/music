@@ -1,4 +1,4 @@
-name: Build Gradle project
+name: Run All Tests
 
 on:
   push:
