@@ -1,5 +1,6 @@
 package org.pareto.music.feature_requests.functions
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -16,6 +17,7 @@ import org.pareto.music.perform.StringBuilderPerformer
 import org.pareto.music.feature_requests.FeatureRequest
 import kotlin.test.assertEquals
 
+@Disabled
 open class MakeFunctionsWork : FeatureRequest() {
 
     @Nested

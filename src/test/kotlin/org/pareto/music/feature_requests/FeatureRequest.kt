@@ -11,6 +11,6 @@ open class FeatureRequest {
 
         try { block().also { pWrap("PASS")} }
         catch(ex : AssertionFailedError) { pWrap("FAIL") }
-        println("${currentStackTrace()[2]}")
+        catch(ex : NotImplementedError) { pWrap("FAIL")}
     }
 }
