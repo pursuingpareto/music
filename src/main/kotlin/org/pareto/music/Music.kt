@@ -4,9 +4,9 @@ typealias Melody   = Dimension.Time
 typealias Decision = Dimension.Choice
 typealias Harmony  = Dimension.Space
 
-infix fun Music.then(that: Music) = Melody(this, that)
-infix fun Sound.and (that: Music) = Harmony(that, this)
-infix fun Sound.or  (that: Music) = Decision(this, that)
+infix fun Music?.then(that: Music?) = Melody(this, that)
+infix fun Music?.and (that: Music?) = Harmony(that, this)
+infix fun Music?.or  (that: Music?) = Decision(this, that)
 
 /**
  * A container for various process types.  Each subtype can be represented
@@ -41,18 +41,7 @@ infix fun Sound.or  (that: Music) = Decision(this, that)
  */
 sealed interface Music
 
-/**
- * The [Silence] object contains nothing, so it is always skipped at runtime.
- *
- * This process can occasionally be useful! The standard library's [Possible][StdLib.Possible]
- * process uses it!
- */
-object Silence : Music
-
-/**
- * Every instance of [Music] that isn't [Silence] is [Sound]
- */
-sealed interface Sound : Music
+val Silence = null
 
 sealed interface Expandable : Music {
     val name: MusicName
@@ -63,7 +52,7 @@ sealed interface Expandable : Music {
  *
  * @param name A serial representation of this terminal "object".
  */
-data class Note(override val name: Name) : Sound, Expandable {
+data class Note(override val name: Name) : Expandable {
     constructor(s: String) : this(Name(s))
     class Name(text: Text.nonPascalCase) : MusicName(text) {
         companion object {
@@ -73,11 +62,11 @@ data class Note(override val name: Name) : Sound, Expandable {
     }
 }
 
-sealed interface NonTerminal : Sound
+sealed interface NonTerminal: Music
 
 sealed interface Fn : NonTerminal {
 
-    fun call(params: List<Music>, namespace: FunctionNamespace<Definition>): Music =
+    fun call(params: List<Music?>, namespace: FunctionNamespace<Definition>): Music =
         namespace[name]?.replacingArgsWith(params, namespace) ?: throw UnrunnableProcess("No function with name $name in namespace")
 
     val name: Name
@@ -94,7 +83,7 @@ sealed interface Fn : NonTerminal {
      *
      * @param name the [Fn.Name] of the corresponding [Definition] process.
      */
-    data class Call(override val name: Name, val params: List<Music> = listOf()) : Fn, Expandable
+    data class Call(override val name: Name, val params: List<Music?> = listOf()) : Fn, Expandable
 
     /**
      * A process with a [Fn.Name] which can be referred to by a [Call]. Names
@@ -111,7 +100,7 @@ sealed interface Fn : NonTerminal {
 
         init { Validate.argsAreUsedInBody(this) }
 
-        fun replacingArgsWith(params: List<Music>, namespace: FunctionNamespace<Definition>): Music {
+        fun replacingArgsWith(params: List<Music?>, namespace: FunctionNamespace<Definition>): Music? {
             val map = requiredArgs.zip(params).associate { it.first to it.second }.toMap()
             return music.rebuildWithReplacements(map, namespace)
         }
@@ -129,9 +118,9 @@ sealed interface Fn : NonTerminal {
  */
 @Suppress("unused", "PropertyName")
 sealed class Dimension(
-    val Left: Music,
-    val Right: Music,
-) : NonTerminal {
+    val Left: Music?,
+    val Right: Music?,
+) : NonTerminal, Music {
 
     /**
      * ## `a > b`
@@ -143,8 +132,8 @@ sealed class Dimension(
      * @param Tock the second subprocess
      */
     data class Time(
-        val Tick: Music,
-        val Tock: Music,
+        val Tick: Music?,
+        val Tock: Music?,
     ) : Dimension(Tick, Tock)
 
     /**
@@ -156,8 +145,8 @@ sealed class Dimension(
      * @param Wont the second choice
      */
     data class Choice(
-        val Will: Sound,
-        val Wont: Music,
+        val Will: Music?,
+        val Wont: Music?,
     ) : Dimension(Will, Wont)
 
     /**
@@ -172,18 +161,19 @@ sealed class Dimension(
      * @param Back the "second" of two concurrent subprocesses
      */
     data class Space(
-        val Front: Music,
-        val Back: Sound,
+        val Front: Music?,
+        val Back: Music?,
     ) : Dimension(Front, Back)
 }
 
 /**
  * Produces a canonical, language-agnostic string representation of this process.
  */
-fun Music.canonical(): String = when (this) {
+fun Music?.canonical(): String = when (this) {
+    null ->          "[ ]"
     is Dimension.Choice -> when(Wont) {
                // this indicates "Optional" Music
-               Silence ->  "[ ${Will.canonical()} ]"
+               null ->  "[ ${Will.canonical()} ]"
                   else ->   "${Will.canonical()} | ${Wont.canonical()}" }
     is Dimension.Space ->  "${Front.canonical()} & ${Back.canonical()}"
     is Dimension.Time ->    "${Tick.canonical()} > ${Tock.canonical()}"
@@ -191,20 +181,20 @@ fun Music.canonical(): String = when (this) {
         "$name(${requiredArgs.joinToString()})\n  : ${music.canonical()}"
         else "$name\n  : ${music.canonical()}"
     }
-    is Silence ->          "[ ]"
+
     is Fn.Call -> { if (params.isNotEmpty())
         "$name(${params.joinToString { it.canonical() }})"
         else "$name" }
     is Note ->             name.toString()
 }
 
-fun Music.rebuildWithReplacements(replacements: Map<Note.Name, Music>, namespace: FunctionNamespace<Fn.Definition>): Music {
+fun Music?.rebuildWithReplacements(replacements: Map<Note.Name, Music?>, namespace: FunctionNamespace<Fn.Definition>): Music? {
     return when(this) {
-        is Silence -> Silence
+        null -> null
         is Note -> replacements[this.name] ?: this
         is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.rebuildWithReplacements(replacements, namespace) ?: throw UnrunnableProcess("name $name does not exist in namespace")
-        is Decision -> Decision(Will.rebuildWithReplacements(replacements, namespace) as Sound, Wont.rebuildWithReplacements(replacements, namespace))
-        is Harmony -> Harmony(Front.rebuildWithReplacements(replacements, namespace), Back.rebuildWithReplacements(replacements, namespace) as Sound)
+        is Decision -> Decision(Will.rebuildWithReplacements(replacements, namespace), Wont.rebuildWithReplacements(replacements, namespace))
+        is Harmony -> Harmony(Front.rebuildWithReplacements(replacements, namespace), Back.rebuildWithReplacements(replacements, namespace))
         is Melody -> Melody(Tick.rebuildWithReplacements(replacements, namespace), Tock.rebuildWithReplacements(replacements, namespace))
         is Fn.Definition -> TODO()
     }

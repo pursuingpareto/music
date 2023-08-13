@@ -134,7 +134,7 @@ class GrammarSpec {
             @Test
             fun `cannot have two empty layers`() {
                 Harmony(
-                    Silence,
+                    null,
                     Note("b"),
                 )
             }

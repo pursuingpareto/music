@@ -68,7 +68,7 @@ object StdLib {
                 Fn.Name(Possible),
                 Decision(
                     Note(process),
-                    Silence),
+                    null),
                 listOf(process)),
             Fn.Definition(
                 Fn.Name(Repeating),
@@ -105,7 +105,7 @@ object StdLib {
     /**
      * A Possible process can be skipped or evaluated at runtime.
      */
-    fun Possible(sound: Sound): Decision = sound or EMPTY
+    fun Possible(music: Music): Decision = music or EMPTY
 
     /**
      * A Repeating process repeats forever.
@@ -130,10 +130,10 @@ object StdLib {
      * Converts a [Sound] into 1 or more concurrent copies of itself.
      */
     @Suppress("Unused")
-    fun Multiple(sound: Sound): Harmony = sound and Possible(Multiple(sound))
+    fun Multiple(music: Music): Harmony = music and Possible(Multiple(music))
 
     /**
      * The Empty process. Always skipped at runtime.
      */
-    val EMPTY = Silence
+    val EMPTY = null
 }

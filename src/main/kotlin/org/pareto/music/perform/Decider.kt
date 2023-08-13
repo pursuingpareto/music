@@ -18,7 +18,7 @@ interface Decider {
     fun decide(decision: Decision, inNamespace: FunctionNamespace<Fn.Definition>) =
         decide(Dilemma(decision.Will, decision.Wont), inNamespace)
 
-    class Dilemma(val will: Music, val wont: Music) {
+    class Dilemma(val will: Music?, val wont: Music?) {
 
         /**
          * Chooses the [Decision].Will branch.
@@ -45,7 +45,7 @@ interface Decider {
         @Suppress("Unused")
         fun preferWontByRatio(by: Int, to: Int) = preferWillByRatio(to, by)
 
-        inner class Choice(val choice: Music)
+        inner class Choice(val choice: Music?)
     }
 
     object UniformRandom: RandomDecider()
@@ -58,7 +58,8 @@ open class RandomDecider: Decider {
         return dilemma.preferWillByRatio(willCount, wontCount)
     }
 
-    private fun Music.branchCount(inNamespace: FunctionNamespace<Fn.Definition>): Int = when(this) {
+    private fun Music?.branchCount(inNamespace: FunctionNamespace<Fn.Definition>): Int = when(this) {
+        null -> 0
         is Decision -> Will.branchCount(inNamespace) + Wont.branchCount(inNamespace)
         is Fn.Call -> inNamespace[name]?.call(params, inNamespace)?.branchCount(inNamespace) ?: throw UnrunnableProcess("Function does not exist")
         else -> 1
