@@ -38,8 +38,8 @@ object Validate {
     //region Fn.Definition validation
     fun argsAreUsedInBody(definition: Fn.Definition) {
         val unaccounted =
-            definition.requiredArgs.toSet() - definition.music.getDescendents { it is Expandable }
-            .filterIsInstance<Expandable>()
+            definition.requiredArgs.toSet() - definition.music.getDescendents { it is Note }
+            .filterIsInstance<Note>()
             .map { it.name }
             .toSet()
 
@@ -50,8 +50,8 @@ object Validate {
 
 
     //region Helpers
-    private fun Music.getDescendents(where: (Music) -> Boolean): List<Music> = when (this) {
-        Silence -> listOf()
+    private fun Music?.getDescendents(where: (Music?) -> Boolean): List<Music?> = when (this) {
+        null -> listOf()
         is Dimension -> {
             val descendents = mutableListOf(Left, Right).filter(where).toMutableList()
             descendents.addAll(Left.getDescendents(where))
@@ -59,7 +59,7 @@ object Validate {
             descendents
         }
         is Fn.Call -> {
-            val descendents = mutableListOf<Music>()
+            val descendents = mutableListOf<Music?>()
             if (where(this)) descendents.add(this)
             this.params.forEach {
                 when(it) {

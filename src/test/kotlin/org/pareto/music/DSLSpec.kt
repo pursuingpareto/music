@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 class DSLSpec {
 
@@ -100,7 +101,7 @@ class DSLSpec {
             assertIs<Fn.Definition>(process)
             val sequence = process.music
             assertIs<Melody>(sequence)
-            assertIs<Silence>(sequence.Tick)
+            assertNull(sequence.Tick)
         }
     }
 

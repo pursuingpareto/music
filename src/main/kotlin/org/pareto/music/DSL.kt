@@ -60,7 +60,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
         init { validateArgNamesUnique(args) }
 
         private val args: List<Note.Name> = args?.toList() ?: listOf()
-        private var music: NonTerminal? = null
+        private var music: Music? = null
 
         /**
          * Converts `"Foo"("a")` to a [Fn.Call] with single param `Expanding("a")`
@@ -95,7 +95,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * ```
          */
         infix fun Any.or(that: Any) = assignToProcess {
-            Dimension.Choice(this.asSound(), that.asMusic())
+            Dimension.Choice(this.asMusic(), that.asMusic())
         }
 
         /**
@@ -107,10 +107,10 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * ```
          */
         infix fun Any.and(that: Any) = assignToProcess {
-            Dimension.Space(this.asMusic(), that.asSound())
+            Dimension.Space(this.asMusic(), that.asMusic())
         }
 
-        private fun <T : NonTerminal> assignToProcess(block: () -> T): T = block().also { music = it }
+        private fun <T : Music> assignToProcess(block: () -> T): T = block().also { music = it }
 
         /**
          * Coerces receiver of [Any] type to [Music]. Fails unless receiver is
@@ -123,23 +123,21 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * If this fails (which will happen if the string is not PascalCase), then
          * coerce to an [Note] process.
          */
-        private fun Any.asMusic(): Music = when (this) {
-            is Function0<*> -> asSound()
-            is String -> asSound()
+        private fun Any.asMusic(): Music? = when (this) {
+            is Function0<*> -> asMusic()
+            is String -> asMusic()
             is Music -> this
             else -> throw DSLParseException("could not convert $this to Process")
         }
 
-        private fun Any.asSound(): Sound = this.asMusic() as? Sound ?: throw DSLParseException("could not convert ${this.asMusic()} to Sound")
-
-        private fun Function0<*>.asSound(): Sound {
-            return invoke()?.asSound()
+        private fun Function0<*>.asMusic(): Music {
+            return invoke()?.asMusic()
                 ?.let { Possible(it) }
                 ?: throw DSLParseException("can't convert function to process")
         }
 
-        private fun String.asSound(): Music {
-            return if (isEmpty()) { Silence } else { try {
+        private fun String.asMusic(): Music? {
+            return if (isEmpty()) { null } else { try {
                 Fn.Call(Fn.Name(this))
             } catch (_: IllegalArgumentException) {
                 Note(Note.Name(this))

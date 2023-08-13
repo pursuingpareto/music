@@ -134,7 +134,7 @@ object Keyword {
  * @param T the type of the compilation artifact.
  */
 fun interface Compiler<T> {
-    fun compile(music: Music): T
+    fun compile(music: Music?): T
 }
 
 

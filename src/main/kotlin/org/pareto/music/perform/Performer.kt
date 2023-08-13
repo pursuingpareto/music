@@ -8,7 +8,6 @@ import org.pareto.music.Harmony
 import org.pareto.music.Melody
 import org.pareto.music.Music
 import org.pareto.music.Note
-import org.pareto.music.Silence
 import org.pareto.music.UnrunnableProcess
 
 
@@ -31,7 +30,7 @@ interface Performer<T> {
     /**
      * Plays a piece of [Music]
      */
-    fun Music.play(): T
+    fun Music?.play(): T?
 
     companion object {
         fun namespaceFromGrammar(grammar: Grammar): FunctionNamespace<Fn.Definition> =
@@ -82,8 +81,8 @@ interface PiecewisePerformer<T>: Performer<T> {
     /**
      * Plays [Music] by delegating to the [Performer] helper methods.
      */
-    override fun Music.play(): T = when(this) {
-        is Silence -> rest()
+    override fun Music?.play(): T = when(this) {
+        null -> rest()
         is Note -> playNote(this)
         is Melody -> playMelody(this)
         is Harmony -> playHarmony(this)

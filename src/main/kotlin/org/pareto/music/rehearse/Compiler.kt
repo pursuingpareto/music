@@ -7,8 +7,6 @@ import org.pareto.music.Decision
 import org.pareto.music.Melody
 import org.pareto.music.Harmony
 import org.pareto.music.Note
-import org.pareto.music.Silence
-import org.pareto.music.Sound
 
 
 typealias Deferred<T> = () -> T
@@ -43,21 +41,21 @@ interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
      */
     fun decision(will: T, wont: T): T
 
-    fun decision(will: Sound, wont: Music): T = decision(compile(will), compile(wont))
+    fun decision(will: Music?, wont: Music?): T = decision(compile(will), compile(wont))
 
     /**
      * Compiles a [Melody] to [T].
      */
     fun melody(tick: T, tock: T): T
 
-    fun melody(tick: Music, tock: Music): T = melody(compile(tick), compile(tock))
+    fun melody(tick: Music?, tock: Music?): T = melody(compile(tick), compile(tock))
 
     /**
      * Compiles a [Harmony] to [T].
      */
     fun harmony(front: T, back: T): T
 
-    fun harmony(front: Music, back: Sound): T = harmony(compile(front), compile(back))
+    fun harmony(front: Music?, back: Music?): T = harmony(compile(front), compile(back))
 
     /**
      * Compiles a [Fn.Call] to [T].
@@ -74,10 +72,10 @@ interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
     fun define(def: Fn.Definition) = define(def.name, def.requiredArgs, compile(def.music))
 
 
-    override fun compile(music: Music): T = with(music) {
+    override fun compile(music: Music?): T = with(music) {
         when (this) {
             is Note -> note(this)
-            is Silence -> empty
+            null -> empty
             is Dimension.Choice -> decision(Will, Wont)
             is Dimension.Space -> harmony(Front, Back)
             is Dimension.Time -> melody(Tick, Tock)
