@@ -38,8 +38,8 @@ object Validate {
     //region Fn.Definition validation
     fun argsAreUsedInBody(definition: Fn.Definition) {
         val unaccounted =
-            definition.requiredArgs.toSet() - definition.music.getDescendents { it is Expandable }
-            .filterIsInstance<Expandable>()
+            definition.requiredArgs.toSet() - definition.music.getDescendents { it is Note }
+            .filterIsInstance<Note>()
             .map { it.name }
             .toSet()
 

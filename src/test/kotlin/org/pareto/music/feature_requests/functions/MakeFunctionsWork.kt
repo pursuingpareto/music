@@ -8,7 +8,6 @@ import org.pareto.music.Fn
 import org.pareto.music.Grammar
 import org.pareto.music.GrammarBuilder
 import org.pareto.music.Music
-import org.pareto.music.NonTerminal
 import org.pareto.music.Note
 import org.pareto.music.StdLib
 import org.pareto.music.compose
@@ -166,7 +165,7 @@ open class MakeFunctionsWork : FeatureRequest() {
 
 
             private fun build(): Fn.Definition {
-                val thisBody = body as? NonTerminal ?: error("bad")
+                val thisBody = body ?: error("bad")
                 val args = requiredArgs ?: listOf()
                 return Fn.Definition(name, thisBody, args).also { namespace[name] = it }
             }

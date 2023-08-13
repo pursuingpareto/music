@@ -43,16 +43,12 @@ sealed interface Music
 
 val Silence = null
 
-sealed interface Expandable : Music {
-    val name: MusicName
-}
-
 /**
  * A [Note] is terminal, so it has no children.
  *
  * @param name A serial representation of this terminal "object".
  */
-data class Note(override val name: Name) : Expandable {
+data class Note(val name: Name) : Music {
     constructor(s: String) : this(Name(s))
     class Name(text: Text.nonPascalCase) : MusicName(text) {
         companion object {
@@ -62,9 +58,7 @@ data class Note(override val name: Name) : Expandable {
     }
 }
 
-sealed interface NonTerminal: Music
-
-sealed interface Fn : NonTerminal {
+sealed interface Fn : Music {
 
     fun call(params: List<Music?>, namespace: FunctionNamespace<Definition>): Music =
         namespace[name]?.replacingArgsWith(params, namespace) ?: throw UnrunnableProcess("No function with name $name in namespace")
@@ -83,7 +77,7 @@ sealed interface Fn : NonTerminal {
      *
      * @param name the [Fn.Name] of the corresponding [Definition] process.
      */
-    data class Call(override val name: Name, val params: List<Music?> = listOf()) : Fn, Expandable
+    data class Call(override val name: Name, val params: List<Music?> = listOf()) : Fn
 
     /**
      * A process with a [Fn.Name] which can be referred to by a [Call]. Names
@@ -94,7 +88,7 @@ sealed interface Fn : NonTerminal {
      */
     data class Definition(
         override val name: Name,
-        val music: NonTerminal,
+        val music: Music,
         val requiredArgs: List<Note.Name> = listOf(),
     ) : Fn {
 
@@ -120,7 +114,7 @@ sealed interface Fn : NonTerminal {
 sealed class Dimension(
     val Left: Music?,
     val Right: Music?,
-) : NonTerminal, Music {
+) : Music {
 
     /**
      * ## `a > b`

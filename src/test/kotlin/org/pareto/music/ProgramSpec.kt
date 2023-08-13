@@ -2,6 +2,7 @@ package org.pareto.music
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.pareto.music.rehearse.thread_validator.Program
 import java.lang.IllegalArgumentException
@@ -277,8 +278,8 @@ class ProgramSpec {
         inner class InvolvingEmpty {
 
             @Test
-            fun `left branch may not be empty`() {
-                assertThrows<DSLParseException> {
+            fun `branches may be empty`() {
+                assertDoesNotThrow {
                     Program.from(
                         Grammar.compose {
                             "OptionalBranch" {
@@ -288,7 +289,7 @@ class ProgramSpec {
                     )
                 }
 
-                assertThrows<DSLParseException> {
+                assertDoesNotThrow {
                     Program.from(
                         Grammar.compose {
                             "OptionalBranch" {
