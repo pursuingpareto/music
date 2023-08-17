@@ -3,6 +3,9 @@ package org.pareto.music
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.canon.GrammarBuilder
+import org.pareto.music.canon.compose
+import org.pareto.music.canon.extend
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull

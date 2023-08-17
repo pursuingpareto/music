@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.pareto.music.Fn
 import org.pareto.music.Grammar
-import org.pareto.music.GrammarBuilder
+import org.pareto.music.canon.GrammarBuilder
 import org.pareto.music.Music
 import org.pareto.music.Note
-import org.pareto.music.StdLib
-import org.pareto.music.compose
+import org.pareto.music.canon.StdLib
+import org.pareto.music.canon.compose
 import org.pareto.music.perform.Decider
 import org.pareto.music.perform.StringBuilderPerformer
 import org.pareto.music.feature_requests.FeatureRequest

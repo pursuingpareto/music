@@ -1,6 +1,18 @@
 @file:Suppress("FunctionName", "MemberVisibilityCanBePrivate")
 
-package org.pareto.music
+package org.pareto.music.canon
+
+import org.pareto.music.Decision
+import org.pareto.music.Fn
+import org.pareto.music.Grammar
+import org.pareto.music.Harmony
+import org.pareto.music.Melody
+import org.pareto.music.Music
+import org.pareto.music.Note
+import org.pareto.music.Silence
+import org.pareto.music.and
+import org.pareto.music.or
+import org.pareto.music.then
 
 object StdLib {
 
@@ -27,7 +39,7 @@ object StdLib {
     /**
      * grace note to make your DSL grammars look nice <3
      */
-    val process = Note.Name("process")
+    val music = Note.Name("music")
 
     /**
      * The [StandardGrammar] is prepended to every grammar built with the DSL.
@@ -64,33 +76,58 @@ object StdLib {
     val StandardGrammar: Grammar = Grammar(
         // this isn't pretty, but no need to depend on the DSL in this package.
         listOf(
+            /**
+             * Possible(music) {
+             *   music or Silence
+             * }
+             */
             Fn.Definition(
                 Fn.Name(Possible),
                 Decision(
-                    Note(process),
-                    null),
-                listOf(process)),
+                    Note(music),
+                    Silence),
+                listOf(music)),
+            /**
+             * Repeating(music) {
+             *   music then Repeating(music)
+             * }
+             */
             Fn.Definition(
                 Fn.Name(Repeating),
                 Melody(
-                    Note(process),
+                    Note(music),
                     Fn.Call(
                         Fn.Name(Repeating),
                         listOf(
-                            Note(process)))),
-                listOf(process)),
+                            Note(music)
+                        ))
+                ),
+                listOf(music)),
+            /**
+             * OneOrMore(music) {
+             *   music then Possible(OneOrMore(music))
+             * }
+             */
             Fn.Definition(
                 Fn.Name(OneOrMore),
                 Melody(
-                    Note(process),
+                    Note(music),
                     Fn.Call(
                         Fn.Name(Possible),
                         listOf(
                             Fn.Call(
                                 Fn.Name(OneOrMore),
                                 listOf(
-                                    Note(process)))))),
-                listOf(process)),
+                                    Note(music)
+                                ))
+                        ))
+                ),
+                listOf(music)),
+            /**
+             * ZeroOrMore(music) {
+             *   Possible(OneOrMore(music))
+             * }
+             */
             Fn.Definition(
                 Fn.Name(ZeroOrMore),
                 Fn.Call(
@@ -99,8 +136,11 @@ object StdLib {
                         Fn.Call(
                             Fn.Name(OneOrMore),
                             listOf(
-                                Note(process))))),
-                listOf(process))))
+                                Note(music)
+                            ))
+                    )),
+                listOf(music))
+        ))
 
     /**
      * A Possible process can be skipped or evaluated at runtime.
@@ -127,7 +167,7 @@ object StdLib {
     fun ZeroOrMore(music: Music): Decision = Possible(OneOrMore(music))
 
     /**
-     * Converts a [Sound] into 1 or more concurrent copies of itself.
+     * Converts a [Music] into 1 or more concurrent copies of itself.
      */
     @Suppress("Unused")
     fun Multiple(music: Music): Harmony = music and Possible(Multiple(music))

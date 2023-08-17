@@ -1,10 +1,12 @@
 package org.pareto.music
 
-import org.pareto.music.StdLib.Possible
+import org.pareto.music.canon.StdLib.Possible
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.canon.canonical
+import org.pareto.music.canon.compose
 import kotlin.test.assertEquals
 
 

@@ -1,7 +1,7 @@
 package org.pareto.music.demo.madlibs
 
 import org.pareto.music.Grammar
-import org.pareto.music.compose
+import org.pareto.music.canon.compose
 import org.pareto.music.perform.Decider
 import org.pareto.music.perform.StringBuilderPerformer
 

@@ -2,6 +2,8 @@
 
 package org.pareto.music
 
+import org.pareto.music.canon.canonical
+
 /**
  * We separate [String]s into [Text.PascalCase]s and [Text.nonPascalCase]s.
  */

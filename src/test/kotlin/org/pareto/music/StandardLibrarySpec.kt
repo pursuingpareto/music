@@ -3,13 +3,14 @@
 package org.pareto.music
 
 import org.pareto.music.Keyword.END
-import org.pareto.music.StdLib.OneOrMore
-import org.pareto.music.StdLib.Possible
-import org.pareto.music.StdLib.Repeating
-import org.pareto.music.StdLib.ZeroOrMore
+import org.pareto.music.canon.StdLib.OneOrMore
+import org.pareto.music.canon.StdLib.Possible
+import org.pareto.music.canon.StdLib.Repeating
+import org.pareto.music.canon.StdLib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.canon.compose
 import org.pareto.music.rehearse.thread_validator.Program
 import kotlin.test.Test
 import kotlin.test.todo
