@@ -1,8 +1,7 @@
-package org.pareto.music
+package org.pareto.music.perform
 
+import org.pareto.music.Grammar
 import org.pareto.music.canon.compose
-import org.pareto.music.perform.Decider
-import org.pareto.music.perform.StringBuilderPerformer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

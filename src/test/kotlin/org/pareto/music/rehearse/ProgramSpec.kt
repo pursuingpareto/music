@@ -1,9 +1,14 @@
-package org.pareto.music
+package org.pareto.music.rehearse
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.AmbiguousBranching
+import org.pareto.music.Grammar
+import org.pareto.music.NoMatchForInput
+import org.pareto.music.ProcessExhausted
+import org.pareto.music.UnrunnableProcess
 import org.pareto.music.canon.compose
 import org.pareto.music.rehearse.thread_validator.Program
 import java.lang.IllegalArgumentException
