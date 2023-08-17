@@ -1,11 +1,16 @@
-package org.pareto.music
+package org.pareto.music.canon
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pareto.music.canon.GrammarBuilder
-import org.pareto.music.canon.compose
-import org.pareto.music.canon.extend
+import org.pareto.music.DSLParseException
+import org.pareto.music.Decision
+import org.pareto.music.Fn
+import org.pareto.music.Grammar
+import org.pareto.music.Harmony
+import org.pareto.music.Melody
+import org.pareto.music.Music
+import org.pareto.music.Note
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull

@@ -1,6 +1,6 @@
 @file:Suppress("PropertyName", "MemberVisibilityCanBePrivate")
 
-package org.pareto.music
+package org.pareto.music.canon
 
 import org.pareto.music.Keyword.END
 import org.pareto.music.canon.StdLib.OneOrMore
@@ -10,7 +10,8 @@ import org.pareto.music.canon.StdLib.ZeroOrMore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.pareto.music.canon.compose
+import org.pareto.music.Grammar
+import org.pareto.music.NoMatchForInput
 import org.pareto.music.rehearse.thread_validator.Program
 import kotlin.test.Test
 import kotlin.test.todo
