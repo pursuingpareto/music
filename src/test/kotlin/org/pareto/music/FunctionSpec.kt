@@ -3,6 +3,8 @@ package org.pareto.music
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.canon.canonical
+import org.pareto.music.canon.compose
 import org.pareto.music.perform.Decider
 import org.pareto.music.perform.StringBuilderPerformer
 import org.pareto.music.rehearse.thread_validator.Program

@@ -10,7 +10,7 @@ infix fun Music?.or  (that: Music?) = Decision(this, that)
 
 /**
  * A container for various process types.  Each subtype can be represented
- * in a "canonical" form by calling [Music.canonical].
+ * in a "canonical" form by calling [Music].canonical.
  *
  * Consider the following representation of a grammar describing dice rolls:
  *
@@ -160,31 +160,10 @@ sealed class Dimension(
     ) : Dimension(Front, Back)
 }
 
-/**
- * Produces a canonical, language-agnostic string representation of this process.
- */
-fun Music?.canonical(): String = when (this) {
-    null ->          "[ ]"
-    is Dimension.Choice -> when(Wont) {
-               // this indicates "Optional" Music
-               null ->  "[ ${Will.canonical()} ]"
-                  else ->   "${Will.canonical()} | ${Wont.canonical()}" }
-    is Dimension.Space ->  "${Front.canonical()} & ${Back.canonical()}"
-    is Dimension.Time ->    "${Tick.canonical()} > ${Tock.canonical()}"
-    is Fn.Definition -> { if (requiredArgs.isNotEmpty())
-        "$name(${requiredArgs.joinToString()})\n  : ${music.canonical()}"
-        else "$name\n  : ${music.canonical()}"
-    }
-
-    is Fn.Call -> { if (params.isNotEmpty())
-        "$name(${params.joinToString { it.canonical() }})"
-        else "$name" }
-    is Note ->             name.toString()
-}
 
 fun Music?.rebuildWithReplacements(replacements: Map<Note.Name, Music?>, namespace: FunctionNamespace<Fn.Definition>): Music? {
     return when(this) {
-        null -> null
+        Silence -> Silence
         is Note -> replacements[this.name] ?: this
         is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.rebuildWithReplacements(replacements, namespace) ?: throw UnrunnableProcess("name $name does not exist in namespace")
         is Decision -> Decision(Will.rebuildWithReplacements(replacements, namespace), Wont.rebuildWithReplacements(replacements, namespace))

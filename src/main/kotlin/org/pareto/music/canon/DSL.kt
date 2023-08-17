@@ -1,6 +1,13 @@
-package org.pareto.music
+package org.pareto.music.canon
 
-import org.pareto.music.StdLib.Possible
+import org.pareto.music.DSLParseException
+import org.pareto.music.Dimension
+import org.pareto.music.Fn
+import org.pareto.music.Grammar
+import org.pareto.music.Music
+import org.pareto.music.Note
+import org.pareto.music.Silence
+
 
 fun Grammar.Companion.compose(includeStdLib: Boolean = true, block: GrammarBuilder.() -> Unit): Grammar {
     return if (includeStdLib) { StdLib.StandardGrammar.extend(block) } else { Grammar(GrammarBuilder().apply(block).build()) }
@@ -34,7 +41,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
 
     operator fun String.invoke(vararg args: String, block: FunctionDefinitionBuilder.() -> Unit) = this.apply {
         name = Fn.Name(this).also { name ->
-            definedBuilder = FunctionDefinitionBuilder(name, args.map {Note.Name(it)}).also { builder ->
+            definedBuilder = FunctionDefinitionBuilder(name, args.map { Note.Name(it) }).also { builder ->
                 builder.apply(block)
                 components.add(builder.build())
             }
@@ -65,7 +72,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
         /**
          * Converts `"Foo"("a")` to a [Fn.Call] with single param `Expanding("a")`
          */
-        operator fun String.invoke(vararg maybeParams: Any): Fn.Call = assignToProcess {
+        operator fun String.invoke(vararg maybeParams: Any?): Fn.Call = assignToProcess {
             val params = maybeParams.map { it.asMusic() }
             Fn.Call(Fn.Name(this), params)
         }
@@ -82,7 +89,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * val a_then_b = "a" then "b"
          * ```
          */
-        infix fun Any.then(that: Any) = assignToProcess {
+        infix fun Any?.then(that: Any?) = assignToProcess {
             Dimension.Time(this.asMusic(), that.asMusic())
         }
 
@@ -94,7 +101,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * val a_or_b = "a" or "b"
          * ```
          */
-        infix fun Any.or(that: Any) = assignToProcess {
+        infix fun Any?.or(that: Any?) = assignToProcess {
             Dimension.Choice(this.asMusic(), that.asMusic())
         }
 
@@ -106,7 +113,7 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * val a_and_b = "a" and "b"
          * ```
          */
-        infix fun Any.and(that: Any) = assignToProcess {
+        infix fun Any?.and(that: Any?) = assignToProcess {
             Dimension.Space(this.asMusic(), that.asMusic())
         }
 
@@ -116,23 +123,26 @@ class GrammarBuilder : Builder<List<Fn.Definition>> {
          * Coerces receiver of [Any] type to [Music]. Fails unless receiver is
          * [String], [Music], or a 0-arity function.
          *
-         * When the receiver is a zero-arity function, call it and return an [Possible] with
-         * child `process` equal to the coerced return value.
+         * When the receiver is a zero-arity function, call it and return a `music or Silence` with
+         * child `music` equal to the coerced return value.
          *
          * When receiver is a String, first try to coerce it to a [Fn.Call].
          * If this fails (which will happen if the string is not PascalCase), then
          * coerce to an [Note] process.
          */
-        private fun Any.asMusic(): Music? = when (this) {
+        private fun Any?.asMusic(): Music? = when (this) {
+            Silence -> Silence
             is Function0<*> -> asMusic()
             is String -> asMusic()
             is Music -> this
             else -> throw DSLParseException("could not convert $this to Process")
         }
 
+        private fun possible(music: Music) = music or Silence
+
         private fun Function0<*>.asMusic(): Music {
             return invoke()?.asMusic()
-                ?.let { Possible(it) }
+                ?.let { possible(it) }
                 ?: throw DSLParseException("can't convert function to process")
         }
 

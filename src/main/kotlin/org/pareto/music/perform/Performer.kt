@@ -8,6 +8,7 @@ import org.pareto.music.Harmony
 import org.pareto.music.Melody
 import org.pareto.music.Music
 import org.pareto.music.Note
+import org.pareto.music.Silence
 import org.pareto.music.UnrunnableProcess
 
 

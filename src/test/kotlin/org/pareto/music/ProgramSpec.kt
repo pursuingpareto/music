@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.pareto.music.canon.compose
 import org.pareto.music.rehearse.thread_validator.Program
 import java.lang.IllegalArgumentException
 

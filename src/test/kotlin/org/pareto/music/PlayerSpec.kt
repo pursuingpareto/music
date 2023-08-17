@@ -1,5 +1,6 @@
 package org.pareto.music
 
+import org.pareto.music.canon.compose
 import org.pareto.music.perform.Decider
 import org.pareto.music.perform.StringBuilderPerformer
 import kotlin.test.Test
