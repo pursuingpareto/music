@@ -1,4 +1,4 @@
-package org.pareto.music.rehearse.thread_validator
+package org.pareto.music.rehearse.threadValidator
 
 import org.pareto.music.AmbiguousBranching
 import org.pareto.music.rehearse.ArgMap

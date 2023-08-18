@@ -7,7 +7,7 @@ import org.pareto.music.canon.canonical
 import org.pareto.music.canon.compose
 import org.pareto.music.perform.Decider
 import org.pareto.music.perform.StringBuilderPerformer
-import org.pareto.music.rehearse.thread_validator.Program
+import org.pareto.music.rehearse.threadValidator.Program
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.todo
