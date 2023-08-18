@@ -10,7 +10,7 @@ import org.pareto.music.NoMatchForInput
 import org.pareto.music.ProcessExhausted
 import org.pareto.music.UnrunnableProcess
 import org.pareto.music.canon.compose
-import org.pareto.music.rehearse.thread_validator.Program
+import org.pareto.music.rehearse.threadValidator.Program
 import java.lang.IllegalArgumentException
 
 class ProgramSpec {

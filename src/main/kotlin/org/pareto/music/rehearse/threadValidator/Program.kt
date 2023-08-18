@@ -1,9 +1,9 @@
-package org.pareto.music.rehearse.thread_validator
+package org.pareto.music.rehearse.threadValidator
 
 import org.pareto.music.Fn
+import org.pareto.music.FunctionNamespace
 import org.pareto.music.Grammar
 import org.pareto.music.Keyword
-import org.pareto.music.FunctionNamespace
 import org.pareto.music.NoMatchForInput
 import org.pareto.music.Note
 import org.pareto.music.ProcessExhausted
@@ -19,15 +19,19 @@ import org.pareto.music.Text
  *
  * When words can be unambiguously assigned.
  */
-class Program(private val namespace: FunctionNamespace<OnWord>) {
+open class Program(private val namespace: FunctionNamespace<OnWord>) {
 
     /**
      * [f] is a function which gets called and reassigned every time
      * a [Program] is [invoke]d
      */
     private var f: OnWord = { word ->
-        if (word is Text.PascalCase) begin(Fn.Name(word))
-        else throw NoMatchForInput("First invoking must be with PascalCase term.")}
+        if (word is Text.PascalCase) {
+            begin(Fn.Name(word))
+        } else {
+            throw NoMatchForInput("First invoking must be with PascalCase term.")
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     operator fun invoke(word: Text): Program = this
