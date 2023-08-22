@@ -1,10 +1,6 @@
 package org.pareto.music.perform
 
-import org.pareto.music.Decision
-import org.pareto.music.Fn
-import org.pareto.music.FunctionNamespace
-import org.pareto.music.Music
-import org.pareto.music.UnrunnableProcess
+import org.pareto.music.*
 import kotlin.random.Random
 
 
@@ -61,7 +57,7 @@ open class RandomDecider: Decider {
     private fun Music?.branchCount(inNamespace: FunctionNamespace<Fn.Definition>): Int = when(this) {
         null -> 0
         is Decision -> Will.branchCount(inNamespace) + Wont.branchCount(inNamespace)
-        is Fn.Call -> inNamespace[name]?.call(params, inNamespace)?.branchCount(inNamespace) ?: throw UnrunnableProcess("Function does not exist")
+        is Fn.Call -> inNamespace[name]?.call(params, inNamespace)?.branchCount(inNamespace) ?: throw FunctionNotDefined(name)
         else -> 1
     }
 }

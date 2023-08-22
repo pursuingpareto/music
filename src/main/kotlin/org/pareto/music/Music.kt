@@ -61,7 +61,7 @@ data class Note(val name: Name) : Music {
 sealed interface Fn : Music {
 
     fun call(params: List<Music?>, namespace: FunctionNamespace<Definition>): Music =
-        namespace[name]?.replacingArgsWith(params, namespace) ?: throw UnrunnableProcess("No function with name $name in namespace")
+        namespace[name]?.replacingArgsWith(params, namespace) ?: throw FunctionNotDefined(name)
 
     val name: Name
 
@@ -165,7 +165,7 @@ fun Music?.rebuildWithReplacements(replacements: Map<Note.Name, Music?>, namespa
     return when(this) {
         Silence -> Silence
         is Note -> replacements[this.name] ?: this
-        is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.rebuildWithReplacements(replacements, namespace) ?: throw UnrunnableProcess("name $name does not exist in namespace")
+        is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.rebuildWithReplacements(replacements, namespace) ?: throw FunctionNotDefined(name)
         is Decision -> Decision(Will.rebuildWithReplacements(replacements, namespace), Wont.rebuildWithReplacements(replacements, namespace))
         is Harmony -> Harmony(Front.rebuildWithReplacements(replacements, namespace), Back.rebuildWithReplacements(replacements, namespace))
         is Melody -> Melody(Tick.rebuildWithReplacements(replacements, namespace), Tock.rebuildWithReplacements(replacements, namespace))

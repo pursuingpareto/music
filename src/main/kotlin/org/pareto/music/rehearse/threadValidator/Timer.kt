@@ -1,9 +1,6 @@
 package org.pareto.music.rehearse.threadValidator
 
-import org.pareto.music.Keyword
-import org.pareto.music.ProcessException
-import org.pareto.music.Fn
-import org.pareto.music.Grammar
+import org.pareto.music.*
 
 
 /**
@@ -59,14 +56,14 @@ class MusicTimer(private val program: Program, rootFunctionName: String) {
         try {
             Fn.Name(rootFunctionName)
         } catch (ex: Exception) {
-            throw ProcessException(cause = ex)
+            throw InvalidInput(cause = ex)
         }
         program.invoke(rootFunctionName)
     }
 
     fun transitionTo(text: String): MusicTimer {
         failIfExhausted()
-        if (text == Keyword.END) throw ProcessException("complete timing by calling stop")
+        if (text == Keyword.END) throw InvalidInput("complete timing by calling stop")
         timer.start(text)
         program.invoke(text)
         return this
@@ -80,7 +77,7 @@ class MusicTimer(private val program: Program, rootFunctionName: String) {
     }
 
     private fun failIfExhausted() {
-        if (exhausted) throw ProcessException("timer has already been used")
+        if (exhausted) throw ProcessExhausted("timer has already been used")
     }
 }
 
@@ -113,7 +110,7 @@ private class Timer {
 
     fun stop(): TimingReport {
         if (currentTiming == null) {
-            throw ProcessException("nothing was timed")
+            throw InvalidInput("Nothing was timed.")
         }
         currentTiming?.completeAt(System.nanoTime())?.also { completedTimings.add(it) }
         return completedTimings.map { NamedDuration(it.name, it.durationNanos) }

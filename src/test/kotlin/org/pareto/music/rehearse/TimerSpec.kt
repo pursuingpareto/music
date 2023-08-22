@@ -5,7 +5,7 @@ import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pareto.music.Grammar
-import org.pareto.music.ProcessException
+import org.pareto.music.Mistake
 import org.pareto.music.canon.compose
 import org.pareto.music.rehearse.threadValidator.Program
 import org.pareto.music.rehearse.threadValidator.timer
@@ -39,17 +39,17 @@ class TimerSpec {
 
     @Test
     fun `timer fails if instantiated with invalid function name`() {
-        assertThrows<ProcessException> {
+        assertThrows<Mistake> {
             val program = Program.from(abc)
             program.timer("abc")
         }
 
-        assertThrows<ProcessException> {
+        assertThrows<Mistake> {
             val program = Program.from(abc)
             program.timer("a")
         }
 
-        assertThrows<ProcessException> {
+        assertThrows<Mistake> {
             val program = Program.from(abc)
             program.timer("ABCD")
         }
@@ -61,7 +61,7 @@ class TimerSpec {
         val timer = program.timer("ABC")
         timer.transitionTo("a")
         timer.transitionTo("b")
-        assertThrows<ProcessException> { timer.transitionTo("d") }
+        assertThrows<Mistake> { timer.transitionTo("d") }
     }
 
     @Test
@@ -71,7 +71,7 @@ class TimerSpec {
         timer.transitionTo("a")
         timer.transitionTo("b")
         timer.transitionTo("c")
-        assertThrows<ProcessException> { timer.transitionTo("END") }
+        assertThrows<Mistake> { timer.transitionTo("END") }
     }
 
     @Test
@@ -80,6 +80,6 @@ class TimerSpec {
         val timer = program.timer("ABC")
         timer.transitionTo("a")
         timer.transitionTo("b")
-        assertThrows<ProcessException> { timer.stop() }
+        assertThrows<Mistake> { timer.stop() }
     }
 }
