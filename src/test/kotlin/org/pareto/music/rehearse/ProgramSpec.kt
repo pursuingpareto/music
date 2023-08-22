@@ -8,7 +8,7 @@ import org.pareto.music.AmbiguousBranching
 import org.pareto.music.Grammar
 import org.pareto.music.NoMatchForInput
 import org.pareto.music.ProcessExhausted
-import org.pareto.music.UnrunnableProcess
+import org.pareto.music.Unrunnable
 import org.pareto.music.canon.compose
 import org.pareto.music.rehearse.threadValidator.Program
 import java.lang.IllegalArgumentException
@@ -96,7 +96,7 @@ class ProgramSpec {
 
         @Test
         fun `simple sequence fails after exhaustion`() {
-            assertThrows<UnrunnableProcess> {
+            assertThrows<Unrunnable> {
                 Program.from(ab).invoke("AB")("a")("b")("c")
             }
         }
@@ -108,11 +108,11 @@ class ProgramSpec {
 
         @Test
         fun `three element sequence fails when improperly called`() {
-            assertThrows<UnrunnableProcess> {
+            assertThrows<Unrunnable> {
                 Program.from(abc).invoke("ABC")("a")("b")("c")("d")
             }
 
-            assertThrows<UnrunnableProcess> {
+            assertThrows<Unrunnable> {
                 Program.from(abc).invoke("ABC")("a")("b")("d")
             }
         }
@@ -130,7 +130,7 @@ class ProgramSpec {
                     .invoke("OptionalAThenB")
                     .invoke("b")
 
-                assertThrows<UnrunnableProcess> {
+                assertThrows<Unrunnable> {
                     Program.from(optionalAThenB)
                         .invoke("OptionalAThenB")
                         .invoke("fail")
@@ -143,7 +143,7 @@ class ProgramSpec {
                     .invoke("AThenOptionalB")
                     .invoke("a")("b")
 
-                assertThrows<UnrunnableProcess> {
+                assertThrows<Unrunnable> {
                     Program.from(aThenOptionalB)
                         .invoke("AThenOptionalB")
                         .invoke("b")
@@ -192,19 +192,19 @@ class ProgramSpec {
 
             @Test
             fun `three element sequence with optional middle fails when called incorrectly`() {
-                assertThrows<UnrunnableProcess> {
+                assertThrows<Unrunnable> {
                     Program.from(optionalMiddle)
                         .invoke("OptionalMiddle")
                         .invoke("a")("d")
                 }
 
-                assertThrows<UnrunnableProcess> {
+                assertThrows<Unrunnable> {
                     Program.from(optionalMiddle)
                         .invoke("OptionalMiddle")
                         .invoke("a")("b")("f")
                 }
 
-                assertThrows<UnrunnableProcess> {
+                assertThrows<Unrunnable> {
                     Program.from(optionalMiddle)
                         .invoke("OptionalMiddle")
                         .invoke("a")("c")("f")

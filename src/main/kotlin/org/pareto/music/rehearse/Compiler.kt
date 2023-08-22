@@ -23,7 +23,7 @@ typealias ArgMap = Map<Fn.Name, List<Note.Name>>
  *
  * The signature of these compiled functions is [T].
  */
-interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
+interface PiecewiseCompiler<T> {
 
     /**
      * [Silence] compiled to [T].
@@ -73,7 +73,7 @@ interface PiecewiseCompiler<T> : org.pareto.music.Compiler<T> {
     fun define(def: Fn.Definition) = define(def.name, def.requiredArgs, compile(def.music))
 
 
-    override fun compile(music: Music?): T = with(music) {
+    fun compile(music: Music?): T = with(music) {
         when (this) {
             is Note -> note(this)
             null -> empty

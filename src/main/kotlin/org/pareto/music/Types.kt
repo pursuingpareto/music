@@ -95,21 +95,93 @@ class Grammar(val definitions: List<Fn.Definition>) {
 
 
 //region Exceptions
-open class ProcessException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
+typealias GrammarValidationException = Mistake.GrammarValidationException
+typealias CouldNotCompile = Mistake.CouldNotCompile
+typealias DSLParseException = Mistake.DSLParseException
+typealias InvalidInput = Mistake.InvalidInput
+typealias ProcessExhausted = Unrunnable.ProcessExhausted
+typealias AmbiguousBranching = Unrunnable.AmbiguousBranching
+typealias FunctionNotDefined = Unrunnable.FunctionNotDefined
+typealias NoMatchForInput = Unrunnable.NoMatchForInput
 
-class GrammarValidationException(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)
+/**
+ * Base exception for org.pareto.music
+ */
+sealed class Mistake(
+    message: String? = null,
+    cause: Throwable? = null) : Exception(message, cause) {
 
-open class UnrunnableProcess(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)
+    /**
+     * Thrown immediately after a [Grammar] is constructed.
+     */
+    class GrammarValidationException(
+        message: String? = null,
+        cause: Throwable? = null) : Mistake(message, cause)
 
-class ProcessExhausted(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause)
+    /**
+     * Catch-all for compilation errors.
+     */
+    class CouldNotCompile(
+        message: String? = null,
+        cause: Throwable? = null) : Mistake(message, cause)
 
-class AmbiguousBranching(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause)
+    /**
+     * A DSLParseException is only thrown at grammar-definition time.
+     */
+    class DSLParseException(
+        message: String? = null,
+        cause: Throwable? = null) : Mistake(message, cause)
 
-class NoMatchForInput(message: String? = null, cause: Throwable? = null) : UnrunnableProcess(message, cause) {
-    constructor(word: Text) : this(message = "No way to transition to $word")
+    /**
+     * Thrown at runtime when invalid input provided.
+     */
+    class InvalidInput(
+        message: String? = null,
+        cause: Throwable? = null) : Mistake(message, cause)
 }
 
-class DSLParseException(message: String? = null, cause: Throwable? = null) : ProcessException(message, cause)
+
+/**
+ * [Unrunnable] and its subclasses are thrown *after* a [Grammar] has been successfully
+ * defined.
+ */
+sealed class Unrunnable(
+    message: String? = null,
+    cause: Throwable? = null) : Mistake(message, cause) {
+
+    /**
+     * Thrown when caller attempts to continue running an already-completed process.
+     */
+    class ProcessExhausted(
+        message: String? = null,
+        cause: Throwable? = null) : Unrunnable(message, cause)
+
+    /**
+     * Thrown at runtime when evaluating a [Decision] that cannot be unambiguously resolved
+     * with the provided input.
+     */
+    class AmbiguousBranching(
+        message: String? = null,
+        cause: Throwable? = null) : Unrunnable(message, cause)
+
+    /**
+     * Thrown whenever a function definition does not exist.
+     */
+    class FunctionNotDefined(
+        message: String?,
+        cause: Throwable? = null) : Unrunnable(message, cause) {
+        constructor(functionName: Fn.Name) : this("Function ${functionName.value} is not defined.")
+    }
+
+    /**
+     * Thrown when validating a [Grammar] when the provided input does not match that grammar.
+     */
+    class NoMatchForInput(
+        message: String? = null,
+        cause: Throwable? = null) : Unrunnable(message, cause) {
+        constructor(word: Text) : this(message = "No way to transition to $word")
+        }
+    }
 //endregion
 
 
@@ -125,59 +197,6 @@ typealias FunctionNamespace<T> = Map<Fn.Name, T>
 object Keyword {
     const val END = "END"
 }
-
-
-/**
- * Compiles [Music] to [T]. Offers runtime performance improvements by pre-compiling [Music].
- *
- * Use a [Compiler] and a [Runner] (or just a [CompilerRunner])
- * instead of an [Interpreter] when you know the full [Grammar] in advance and don't need to inject [Music] into the program at runtime.
- *
- * @param T the type of the compilation artifact.
- */
-fun interface Compiler<T> {
-    fun compile(music: Music?): T
-}
-
-
-/**
- * Interprets [Music] as [T]. This is an on-the-fly alternative to using a [Compiler] and a [Runner].
- *
- * Use an [Interpreter] instead of a [Compiler] when you don't know the full [Grammar] that you're running in advance.
- *
- * @param T the output type of the interpreter. May often be ignored if interpretation is intended to work via side effects.
- */
-fun interface Interpreter<T> {
-    fun interpret(music: Music): T
-}
-
-
-/**
- * Converts [Music] to [Music]!
- */
-fun interface Transposer {
-    fun transpose(music: Music): Music
-}
-
-
-/**
- * Runs [Music] and produces [T]
- */
-fun interface Runner<T> {
-    suspend fun run(music: Music): T
-}
-
-
-/**
- * A [Runner<T>] that works by first [compile]ing [Music] to an intermediate artifact of type [C].
- */
-interface CompilerRunner<C, T> : Runner<T>, Compiler<C> {
-
-    suspend fun run(compiled: C): T
-
-    override suspend fun run(music: Music): T = run(compile(music))
-}
-
 
 private fun String.toWord(): Text = Text.from(this)
 

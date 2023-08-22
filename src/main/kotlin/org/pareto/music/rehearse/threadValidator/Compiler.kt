@@ -1,18 +1,9 @@
 package org.pareto.music.rehearse.threadValidator
 
-import org.pareto.music.AmbiguousBranching
+import org.pareto.music.*
 import org.pareto.music.rehearse.ArgMap
-import org.pareto.music.Fn
 import org.pareto.music.rehearse.Globals
-import org.pareto.music.Grammar
-import org.pareto.music.Keyword
 import org.pareto.music.rehearse.Locals
-import org.pareto.music.Music
-import org.pareto.music.NoMatchForInput
-import org.pareto.music.Note
-import org.pareto.music.ProcessException
-import org.pareto.music.UnrunnableProcess
-import org.pareto.music.Text
 import org.pareto.music.rehearse.PiecewiseCompiler
 
 typealias OnWord = (Text) -> Any?
@@ -42,7 +33,7 @@ interface Context: PiecewiseCompiler<OnWord> {
         // apply the functions for each branch to the input, mapping exceptions to `false`
         val attempts = listOf(will, wont).map { f ->
             try { f(input) }
-            catch (e: ProcessException) { false }
+            catch (e: Mistake) { false }
         }
 
         // Every branch failed to match the input
@@ -79,7 +70,7 @@ interface Context: PiecewiseCompiler<OnWord> {
             null -> tock(word)
             true -> { w: Text -> tock(w) }
             is Function1<*, *> -> melody(xw as OnWord, tock)
-            else -> throw UnrunnableProcess("Failed to cast $xw to OnWord")
+            else -> throw CouldNotCompile("Failed to cast $xw to OnWord")
         }
     }
 
@@ -122,7 +113,7 @@ open class GrammarContext(
     private fun Fn.Name.materializeWith(call: Fn.Call): Locals<OnWord> {
         return functionArgs[this]
             ?.zip(call.params.map { { compile(it) } })?.toMap()
-            ?: throw UnrunnableProcess("could not materialize args for ${call.name}")
+            ?: throw FunctionNotDefined("Could not materialize args for ${call.name}")
     }
 
 
@@ -171,7 +162,7 @@ open class GrammarContext(
          * Compiles the [Fn.Call] process associated with THIS context to an [OnWord] function.
          */
         fun call(): OnWord {
-            val f = functionNamespace[name] ?: throw UnrunnableProcess()
+            val f = functionNamespace[name] ?: throw FunctionNotDefined(name)
             return { input -> f()(input) }
         }
     }

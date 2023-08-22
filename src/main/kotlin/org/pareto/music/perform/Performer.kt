@@ -1,15 +1,6 @@
 package org.pareto.music.perform
 
-import org.pareto.music.Decision
-import org.pareto.music.Fn
-import org.pareto.music.FunctionNamespace
-import org.pareto.music.Grammar
-import org.pareto.music.Harmony
-import org.pareto.music.Melody
-import org.pareto.music.Music
-import org.pareto.music.Note
-import org.pareto.music.Silence
-import org.pareto.music.UnrunnableProcess
+import org.pareto.music.*
 
 
 /**
@@ -21,7 +12,7 @@ interface Performer<T> {
     /**
      * Entrypoint to initiate program evaluation
      */
-    fun play(pieceName: Fn.Name) = namespace[pieceName]?.music?.play() ?: throw UnrunnableProcess()
+    fun play(pieceName: Fn.Name) = namespace[pieceName]?.music?.play() ?: throw FunctionNotDefined(pieceName)
 
     /**
      * Convenience method for playing a function by name.
@@ -88,7 +79,7 @@ interface PiecewisePerformer<T>: Performer<T> {
         is Melody -> playMelody(this)
         is Harmony -> playHarmony(this)
         is Decision -> decide(Decider.Dilemma(Will, Wont)).choice.play()
-        is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.play() ?: throw UnrunnableProcess("name does not exist in namespace")
+        is Fn.Call -> namespace[name]?.replacingArgsWith(params, namespace)?.play() ?: throw FunctionNotDefined(name)
         is Fn.Definition -> throw RuntimeException("should never get here")
     }
 }
